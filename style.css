@@ -1,0 +1,189 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+}
+
+body {
+    background-color: #f4f4f9;
+    color: #333;
+}
+
+.login-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.login-box {
+    background: #ffffff;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    width: 350px;
+    text-align: center;
+}
+
+.login-box h2 {
+    margin-bottom: 20px;
+    color: #6a0dad;
+}
+
+.login-box input {
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+.login-box button {
+    width: 100%;
+    padding: 10px;
+    background-color: #6a0dad;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+.main-layout {
+    display: flex;
+    height: 100vh;
+}
+
+.sidebar.purple-sidebar {
+    width: 250px;
+    background-color: #6a0dad;
+    color: white;
+    padding: 20px;
+}
+
+.sidebar h2 {
+    margin-bottom: 30px;
+}
+
+.sidebar ul {
+    list-style: none;
+}
+
+.sidebar ul li {
+    padding: 12px 0;
+    cursor: pointer;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.main-content {
+    flex: 1;
+    padding: 30px;
+    overflow-y: auto;
+}
+
+.test-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.test-card {
+    background: #ffffff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.test-card.locked {
+    border-left: 5px solid #ff4d4d;
+}
+
+.test-card.unlocked {
+    border-left: 5px solid #28a745;
+}
+
+.page {
+    padding: 40px;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.text-box {
+    width: 100%;
+    height: 150px;
+    padding: 15px;
+    margin: 20px 0;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background: #fff;
+    resize: none;
+}
+
+.scrollable-text {
+    overflow-y: auto !important;
+    max-height: 180px;
+    background-color: #fafafa;
+    line-height: 1.6;
+}
+
+.cancel-btn {
+    background-color: #ff4d4d;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.submit-btn {
+    background-color: #28a745;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+body.dark-mode {
+    background-color: #121212 !important;
+    color: #ffffff !important;
+}
+
+body.dark-mode .sidebar, 
+body.dark-mode .purple-sidebar {
+    background-color: #1e1e1e !important;
+}
+
+body.dark-mode .test-card,
+body.dark-mode .login-box,
+body.dark-mode .text-box,
+body.dark-mode .price-card,
+body.dark-mode .settings-box {
+    background: #1e1e1e !important;
+    color: #ffffff !important;
+    border-color: #444 !important;
+}
+/* Sahi type kiye hue words (Test ke time aur result ke baad) */
+.correct-text {
+    color: black;
+    background-color: transparent; /* Agar koi aur color laga ho toh hat jayega */
+}
+
+/* Galat type kiye hue words (Result ke time) */
+.mistake-text {
+    color: red;
+    font-weight: bold; /* Taki galti alag se dikh jaye */
+    text-decoration: underline; /* Option: underline lagana ho toh, warna is line ko hata dena */
+}
+
+/* Jo words abhi type nahi hue hain */
+.pending-text {
+    color: black;
+}

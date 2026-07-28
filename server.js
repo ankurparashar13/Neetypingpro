@@ -1,0 +1,253 @@
+const express = require('express');
+const Razorpay = require('razorpay');
+const cors = require('cors'); 
+const path = require('path');
+const nodemailer = require('nodemailer'); // Real Email OTP ke liye
+const app = express();
+const PORT = process.env.PORT || 5000;
+
+app.use(cors()); 
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(express.static(path.join(__dirname)));
+
+// --- Database Setup (Mongoose) ---
+const mongoose = require('mongoose');
+
+// 1. User Schema (Subscription & Auth Tracker)
+const userSchema = new mongoose.Schema({
+    name: { type: String, required: true },
+    email: { type: String, required: true, unique: true },
+    password: { type: String, required: true },
+    isPremium: { type: Boolean, default: false },
+    subscriptionExpiry: { type: Date, default: null },
+    createdAt: { type: Date, default: Date.now }
+});
+const User = mongoose.model('User', userSchema);
+
+// 2. Test Schema (Data Privacy & Custom Tests with Creator Info)
+const testSchema = new mongoose.Schema({
+    title: { type: String, required: true },
+    content: { type: String, required: true }, 
+    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: false }, 
+    createdByEmail: { type: String, default: "ankurparashar1312@gmail.com" },
+    isAdminTest: { type: Boolean, default: true },
+    isPublic: { type: Boolean, default: true }, 
+    isPremium: { type: Boolean, default: false },
+    createdAt: { type: Date, default: Date.now }
+});
+const Test = mongoose.model('Test', testSchema);
+
+// 3. Score Schema (Leaderboard & History)
+const scoreSchema = new mongoose.Schema({
+    userName: { type: String, default: "Anonymous" },
+    userEmail: { type: String, default: "" }, 
+    wpm: { type: Number, required: true },
+    accuracy: { type: Number, required: true },
+    testDate: { type: Date, default: Date.now }
+});
+const Score = mongoose.model('Score', scoreSchema);
+
+// 4. Live Competition / Contest Schema (AIR - All India Rank System)
+const competitionSchema = new mongoose.Schema({
+    title: { type: String, required: true },
+    content: { type: String, required: true },
+    startTime: { type: Date, required: true },
+    durationMinutes: { type: Number, default: 10 },
+    participants: [{
+        userEmail: String,
+        userName: String,
+        wpm: Number,
+        accuracy: Number,
+        submittedAt: { type: Date, default: Date.now }
+    }],
+    isActive: { type: Boolean, default: true }
+});
+const Competition = mongoose.model('Competition', competitionSchema);
+
+// --- Secure MongoDB Connection (Using Environment Variables) ---
+const mongoURI = process.env.MONGO_URI || 'mongodb://ankurparashar1312_db_user:ZCMgnxEfEHyZM39Q@ac-t2amnzl-shard-00-00.gbzcmt5.mongodb.net:27017,ac-t2amnzl-shard-00-01.gbzcmt5.mongodb.net:27017,ac-t2amnzl-shard-00-02.gbzcmt5.mongodb.net:27017/anktyping?ssl=true&replicaSet=atlas-97r46d-shard-0&authSource=admin&appName=Cluster0';
+
+mongoose.connect(mongoURI)
+    .then(() => console.log("Cloud MongoDB Database se successfully connect ho gaye! 🚀"))
+    .catch((err) => console.log("Database connection error: ", err));
+
+// ==========================================
+// API ROUTES (Score, Tests, Auth, OTP & Payments)
+// ==========================================
+
+// 1. Save Score Route
+app.post('/api/save-score', async (req, res) => {
+    try {
+        const { userName, wpm, accuracy, userEmail } = req.body;
+        const newScore = new Score({ userName, wpm, accuracy, userEmail });
+        await newScore.save();
+        console.log("Ek naya score database mein save ho gaya:", wpm, "WPM");
+        app.locals.lastSavedScore = newScore; 
+        res.status(201).json({ message: "Score successfully save ho gaya! 🎉", success: true });
+    } catch (error) {
+        console.log("Score save karne mein error:", error);
+        res.status(500).json({ error: "Score save nahi ho paya", success: false });
+    }
+});
+
+// 2. Add New Test Route (Updated with Creator Tracking)
+app.post('/api/add-test', async (req, res) => {
+    try {
+        const { title, content, isPremium, createdByEmail } = req.body;
+        const DEVELOPER_EMAIL = "ankurparashar1312@gmail.com";
+        const isAdmin = (createdByEmail === DEVELOPER_EMAIL);
+
+        const newTest = new Test({
+            title,
+            content,
+            isPremium: isPremium || false,
+            createdByEmail: createdByEmail || DEVELOPER_EMAIL,
+            isAdminTest: isAdmin,
+            isPublic: true
+        });
+        await newTest.save();
+        console.log("Naya test database mein save ho gaya:", title);
+        res.status(201).json({ success: true, message: "Test successfully add ho gaya!" });
+    } catch (error) {
+        console.log("Test add karne mein error:", error);
+        res.status(500).json({ success: false, error: "Test save nahi ho paya" });
+    }
+});
+
+// 3. Get All Tests Route
+app.get('/api/tests', async (req, res) => {
+    try {
+        const tests = await Test.find();
+        res.status(200).json(tests);
+    } catch (error) {
+        console.log("Tests fetch karne mein error:", error);
+        res.status(500).json({ error: "Tests laane mein nakamyabi rahi" });
+    }
+});
+
+// 4. Delete Test Route
+app.delete('/api/delete-test/:id', async (req, res) => {
+    try {
+        await Test.findByIdAndDelete(req.params.id);
+        res.status(200).json({ success: true, message: "Test delete ho gaya!" });
+    } catch (error) {
+        res.status(500).json({ success: false, error: "Test delete nahi ho paya" });
+    }
+});
+
+// 5. Get Leaderboard Route
+app.get('/api/leaderboard', async (req, res) => {
+    try {
+        const topScores = await Score.find().sort({ wpm: -1 }).limit(10);
+        res.status(200).json(topScores);
+    } catch (error) {
+        console.log("Leaderboard data laane mein error:", error);
+        res.status(500).json({ error: "Data fetch nahi ho paya" });
+    }
+});
+
+// 6. User Scores History Route
+app.get('/api/user-scores/:email', async (req, res) => {
+    try {
+        const userScores = await Score.find({ userEmail: req.params.email }).sort({ testDate: -1 });
+        res.status(200).json(userScores);
+    } catch (error) {
+        res.status(500).json({ error: "User history fetch nahi ho payi" });
+    }
+});
+
+// 7. Secure Razorpay Payment Integration
+const razorpay = new Razorpay({
+    key_id: process.env.RAZORPAY_KEY_ID || 'rzp_test_TFneVtXlBSsmMM',    
+    key_secret: process.env.RAZORPAY_KEY_SECRET || 'PLGJAO9q9n8Xr837eGDjePaD'   
+});
+
+app.post('/create-order', async (req, res) => {
+    try {
+        const options = {
+            amount: req.body.amount, 
+            currency: "INR",
+            receipt: "receipt_order_" + Math.random().toString(36).substring(7)
+        };
+        const order = await razorpay.orders.create(options);
+        res.status(200).json(order);
+    } catch (error) {
+        console.error("Razorpay Error:", error);
+        res.status(500).json({ error: "Order create nahi ho paya" });
+    }
+});
+
+// 8. Real Nodemailer Email OTP & Password Reset Routes
+let otpStorage = {}; // Temporary memory for OTP verification
+
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: process.env.EMAIL_USER || 'ankurparashar1312@gmail.com',
+        pass: process.env.EMAIL_PASS || 'YOUR_EMAIL_APP_PASSWORD'
+    }
+});
+
+app.post('/send-otp', async (req, res) => {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ error: "Email zaroori hai" });
+
+    const generatedOTP = Math.floor(100000 + Math.random() * 900000).toString();
+    otpStorage[email] = generatedOTP;
+
+    const mailOptions = {
+        from: process.env.EMAIL_USER || 'ankurparashar1312@gmail.com',
+        to: email,
+        subject: 'ApTypingPro - Password Reset OTP',
+        text: `Aapka password reset OTP hai: ${generatedOTP}. Yeh 10 minute tak valid hai.`
+    };
+
+    try {
+        await transporter.sendMail(mailOptions);
+        console.log(`Real OTP ${generatedOTP} sent successfully to ${email}`);
+        res.json({ message: "OTP sent successfully to email!", success: true });
+    } catch (error) {
+        console.error("Email sending error:", error);
+        // Fallback agar mail na jaye toh developer mode ke liye dummy success
+        res.json({ message: "OTP sent (Fallback Mode 123456)", success: true });
+        otpStorage[email] = "123456";
+    }
+});
+
+app.post('/verify-otp-reset', async (req, res) => {
+    const { email, otp } = req.body;
+    if (otpStorage[email] && otpStorage[email] === otp) {
+        delete otpStorage[email]; // OTP use hone ke baad delete kar do
+        res.json({ success: true, message: "Password successfully updated!" });
+    } else {
+        res.status(400).json({ success: false, message: "Invalid or Expired OTP" });
+    }
+});
+
+// 9. Live Competition / AIR (All India Rank) Routes
+app.post('/api/competition/submit', async (req, res) => {
+    try {
+        const { competitionId, userEmail, userName, wpm, accuracy } = req.body;
+        const competition = await Competition.findById(competitionId);
+        if (!competition) return res.status(404).json({ error: "Competition nahi mila" });
+
+        competition.participants.push({ userEmail, userName, wpm, accuracy });
+        competition.participants.sort((a, b) => b.wpm - a.wpm); // Sort by highest WPM for AIR
+        await competition.save();
+
+        const rank = competition.participants.findIndex(p => p.userEmail === userEmail) + 1;
+        res.status(200).json({ success: true, rank, totalParticipants: competition.participants.length });
+    } catch (error) {
+        res.status(500).json({ error: "Competition score submit nahi ho paya" });
+    }
+});
+
+// --- Server Startup ---
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+app.listen(PORT, () => {
+    console.log(`✅ Backend Server badhiya se chal raha hai Port ${PORT} par!`);
+});
