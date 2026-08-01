@@ -261,6 +261,7 @@ async function loadTestCategories() {
                 title: test.title,
                 content: test.content,
                 isPremium: test.isPremium,
+                isLive: test.isLive,
                 isDbTest: true
             });
         });
@@ -270,9 +271,9 @@ async function loadTestCategories() {
 
     // Filter based on active folder tab (Free Tests vs Premium Tests)
     if (currentTestFolder === 'free') {
-        combinedTests = combinedTests.filter(t => !t.isPremium);
+        combinedTests = combinedTests.filter(t => !t.isPremium && !t.isLive);
     } else {
-        combinedTests = combinedTests.filter(t => t.isPremium);
+        combinedTests = combinedTests.filter(t => t.isPremium || t.isLive);
     }
 
     container.innerHTML = '';
@@ -294,7 +295,7 @@ async function loadTestCategories() {
                 <h4 style="margin: 0 0 5px 0; color: #333;">${test.title}</h4>
                 <p style="margin: 0; font-size: 13px; color: #666;">Category: ${test.category} | Words: ~${test.content.split(/\s+/).length}</p>
             </div>
-            <span>${isLocked ? '🔒 [PRO LOCKED]' : (test.isPremium ? '💎 [PREMIUM TEST]' : '🟢 [FREE TEST - WITH AD]')}</span>
+            <span>${isLocked ? '🔒 [PRO LOCKED]' : (test.isLive ? '🔴 [LIVE AIR CONTEST]' : (test.isPremium ? '💎 [PREMIUM TEST]' : '🟢 [FREE TEST - WITH AD]'))}</span>
         `;
         
         card.onclick = () => {
@@ -311,16 +312,19 @@ async function loadTestCategories() {
 }
 
 // ==========================================
-// PRE-TEST MANDATORY AD LOGIC FOR FREE TESTS
+// PRE-TEST MANDATORY AD LOGIC FOR FREE & LIVE TESTS
 // ==========================================
 function handleTestClick(test) {
     const isPrem = isUserSuperAdminOrPremium();
 
-    // Agar user Premium hai ya test Premium folder ka hai, toh koi ad nahi chalega
-    if (isPrem || test.isPremium) {
+    // RULE: Agar test Live contest hai, toh chahe user Free ho ya Premium, ad dekhna compulsory hai!
+    if (test.isLive) {
+        showPreTestAd(test);
+    } 
+    else if (isPrem || test.isPremium) {
         startTest(test);
-    } else {
-        // Free user ke liye pre-test ad modal dikhayein
+    } 
+    else {
         showPreTestAd(test);
     }
 }
@@ -576,7 +580,7 @@ function submitTest() {
             loadLeaderboard();
         }
 
-        manageAdsVisibility(); // Modal open hone par ads control check karega
+        manageAdsVisibility();
         document.getElementById('result-modal').style.display = 'flex';
     } catch (error) {
         console.error("Test submit me error aaya:", error);
@@ -602,7 +606,6 @@ async function submitNewTest() {
     const isPremOrAdmin = isUserSuperAdminOrPremium();
     const isAdmin = (currentUserEmail === DEVELOPER_EMAIL);
 
-    // Agar user Free plan par hai (na admin hai na premium), toh block kar do
     if (!isPremOrAdmin) {
         alert("Access Denied! Free users test add nahi kar sakte. Test add karne ke liye Premium plan lein.");
         return;
@@ -610,15 +613,16 @@ async function submitNewTest() {
 
     const titleInput = document.getElementById('new-test-title') || document.getElementById('custom-test-title');
     const contentInput = document.getElementById('new-test-content') || document.getElementById('custom-test-content');
-    const premiumInput = document.getElementById('new-test-premium');
-    const liveInput = document.getElementById('new-test-live');
+    
+    // Radio button se select karenge ki test Free hai, Premium hai, ya Live AIR Contest hai
+    const selectedType = document.querySelector('input[name="test-type-selector"]:checked');
+    const testTypeValue = selectedType ? selectedType.value : 'free';
 
     const title = titleInput ? titleInput.value.trim() : '';
     const content = contentInput ? contentInput.value.trim() : '';
-    
-    // Sirf Admin ke liye checkboxes active rahenge
-    const isPremium = (isAdmin && premiumInput) ? premiumInput.checked : false;
-    const isLive = (isAdmin && liveInput) ? liveInput.checked : false;
+
+    const isPremium = (isAdmin && testTypeValue === 'premium');
+    const isLive = (isAdmin && testTypeValue === 'live');
 
     if (!title || !content) {
         alert("Bhai, कृपया Title aur Content dono bharein!");
@@ -640,11 +644,9 @@ async function submitNewTest() {
         
         const data = await response.json();
         if(data.success) {
-            alert(isAdmin ? "Test successfully database mein publish ho gaya! 🚀" : "Aapka personal test save ho gaya! 📝");
+            alert(isAdmin ? `Test successfully ${testTypeValue.toUpperCase()} ke roop mein publish ho gaya! 🚀` : "Aapka personal test save ho gaya! 📝");
             if (titleInput) titleInput.value = '';
             if (contentInput) contentInput.value = '';
-            if (premiumInput) premiumInput.checked = false;
-            if (liveInput) liveInput.checked = false;
             
             loadTestCategories();
             switchTab('typing-tests');
@@ -795,7 +797,7 @@ function loadLeaderboard() {
 }
 
 // ==========================================
-// PREMIUM & RAZORPAY PAYMENT LOGIC (UPDATED PLANS)
+// PREMIUM & RAZORPAY LIVE PAYMENT LOGIC (UPDATED WITH LIVE KEYS)
 // ==========================================
 async function selectPlan(amountInRupees, planName) {
     const userEmail = localStorage.getItem('user_email') || "user@gmail.com";
@@ -812,7 +814,7 @@ async function selectPlan(amountInRupees, planName) {
         const order = await response.json();
 
         const options = {
-            key: "rzp_test_TFneVtXlBSsmMM", 
+            key: "rzp_live_TKQs9AFoc6XT89", // Aapki asli Razorpay Live Key ID
             amount: order.amount,
             currency: "INR",
             name: "ApTypingPro",

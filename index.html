@@ -59,11 +59,11 @@
         </div>
     </div>
 
-    <!-- Pre-Test Mandatory Ad Popup Modal (Free Tests ke liye) -->
+    <!-- Pre-Test Mandatory Ad Popup Modal (Free Tests & Live Tests ke liye) -->
     <div id="pre-test-ad-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); justify-content: center; align-items: center; z-index: 3000; padding: 20px;">
         <div style="background: #fff; padding: 30px; border-radius: 12px; width: 90%; max-width: 500px; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.4);">
             <h3 style="color: #d35400; margin-top: 0;">📢 Sponsored Advertisement</h3>
-            <p style="color: #666; font-size: 14px;">Free test shuru hone se pehle kripya is ad ko dekhein...</p>
+            <p style="color: #666; font-size: 14px;">Test shuru hone se pehle kripya is ad ko dekhein...</p>
             
             <div style="margin: 20px 0; background: #f1f1f1; padding: 15px; border-radius: 8px; border: 1px dashed #ccc; min-height: 150px; display: flex; align-items: center; justify-content: center;">
                 <span id="ad-timer-text" style="font-weight: bold; font-size: 18px; color: #333;">Ad loading... (5s)</span>
@@ -90,9 +90,9 @@
                 </ul>
             </div>
             
-            <!-- Sidebar Ad Box (Free users ke liye niche dikhega) -->
+            <!-- Sidebar Sponsored Ad Box -->
             <div class="sidebar-ad-box" style="padding: 10px; background: rgba(255,255,255,0.1); border-radius: 6px; text-align: center; margin: 10px;">
-                <p style="font-size: 11px; color: #ddd; margin-bottom: 5px;">Sponsored Ad</p>
+                <p style="font-size: 11px; color: #ddd; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 1px;">Sponsored</p>
                 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-YOUR_ADSENSE_ID" crossorigin="anonymous"></script>
                 <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-YOUR_ADSENSE_ID" data-ad-slot="1234567890" data-ad-format="auto" data-full-width-responsive="true"></ins>
                 <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
@@ -156,7 +156,7 @@
                             </tr>
                         </thead>
                         <tbody id="leaderboard-body">
-                            <!-- Data yahan JS से aayega -->
+                            <!-- Data yahan JS se aayega -->
                         </tbody>
                     </table>
                 </div>
@@ -188,7 +188,7 @@
                 </div>
             </div>
 
-            <!-- Tab 4: Add Custom Test -->
+            <!-- Tab 4: Add Custom Test (Updated with Free, Premium, Live Options) -->
             <div id="tab-add-test" class="tab-pane" style="display: none;">
                 <h1>Add Your Own Custom Typing Test</h1>
                 <div class="add-test-box" style="margin-top: 20px; display: flex; flex-direction: column; gap: 15px; max-width: 600px;">
@@ -199,9 +199,15 @@
                     </select>
                     <textarea id="custom-test-content" placeholder="Paste or type your passage here..." style="padding: 10px; height: 150px; border-radius: 5px; border: 1px solid #ccc;"></textarea>
                     
-                    <label style="display: flex; align-items: center; gap: 8px; font-size: 16px;">
-                        <input type="checkbox" id="new-test-premium" style="width: 18px; height: 18px;"> Isko Premium Test banayein?
-                    </label>
+                    <!-- Test Type Selector (Free, Premium, Live AIR Contest) -->
+                    <div style="background: #f8f9fa; padding: 12px; border-radius: 6px; border: 1px solid #ddd;">
+                        <label style="font-weight: bold; display: block; margin-bottom: 8px; color: #444;">Test Type Select Karein:</label>
+                        <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                            <label style="cursor: pointer;"><input type="radio" name="test-type-selector" value="free" checked> 🟢 Free Test (With Ad)</label>
+                            <label style="cursor: pointer;"><input type="radio" name="test-type-selector" value="premium"> 💎 Premium Test</label>
+                            <label style="cursor: pointer;"><input type="radio" name="test-type-selector" value="live"> 🔴 Live AIR Contest</label>
+                        </div>
+                    </div>
 
                     <button onclick="submitNewTest()" class="submit-btn" style="padding: 12px; background-color: #6c5ce7; color: white; border: none; font-size: 16px; cursor: pointer; border-radius: 5px; width: 100%;">Test Save Karein</button>
                 </div>
@@ -336,7 +342,7 @@
                 </div>
             </div>
 
-            <!-- Result Ad Box (Result screen par ad dikhega free users ko) -->
+            <!-- Result Ad Box -->
             <div id="result-ad-box" style="margin: 20px 0; text-align: center; background: #f9f9f9; padding: 10px; border-radius: 6px; border: 1px dashed #ccc;">
                 <p style="font-size: 12px; color: #777; margin-bottom: 5px;">Advertisement</p>
                 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-YOUR_ADSENSE_ID" crossorigin="anonymous"></script>
@@ -348,16 +354,20 @@
         </div>
     </div>
 
-    <!-- Helper script for Live Contest start -->
+    <!-- Helper script for Live Contest start with Mandatory Ad Integration -->
     <script>
         function joinLiveContest() {
             const contestTest = {
                 title: "Delhi High Court Open Speed Challenge #1",
                 language: "english",
                 category: "Legal Contest",
+                isLive: true,
                 content: "The appellant has approached this Court challenging the order passed by the learned trial judge. It is an admitted fact that the property in dispute was jointly owned by the predecessors of the parties. The core issue revolves around the interpretation of the sale deed executed on the aforementioned date. The respondent's counsel vehemently argued that the limitation period had already expired, rendering the suit non-maintainable. However, referring to the precedents set by the Apex Court in similar matters, it is evident that the cause of action is a continuous one."
             };
-            if (typeof startTest === 'function') {
+            // Live contest ke liye mandatory ad trigger karega (chahe free ho ya premium)
+            if (typeof handleTestClick === 'function') {
+                handleTestClick(contestTest);
+            } else if (typeof startTest === 'function') {
                 startTest(contestTest);
             } else {
                 alert("Test engine loading... Kripya ek baar page refresh kar lein.");
@@ -366,131 +376,65 @@
     </script>
 
     <script src="script.js"></script>
-    <!-- Footer & Legal Links (Razorpay Compliance) -->
-<footer style="background: #1e293b; color: #cbd5e1; padding: 30px 20px; text-align: center; margin-top: 50px; font-family: sans-serif;">
-    <div style="max-width: 1000px; margin: 0 auto; display: flex; flex-wrap: wrap; justify-content: space-around; gap: 20px;">
-        <div>
-            <h3 style="color: #fff; margin-bottom: 10px;">ApTypingPro</h3>
-            <p style="font-size: 14px;">India's Advanced Typing Practice & Speed Test Platform.</p>
-        </div>
-        <div>
-            <h4 style="color: #fff; margin-bottom: 10px;">Quick Links</h4>
-            <p style="margin: 5px 0;"><a href="#" onclick="openModal('privacyModal')" style="color: #38bdf8; text-decoration: none;">Privacy Policy</a></p>
-            <p style="margin: 5px 0;"><a href="#" onclick="openModal('termsModal')" style="color: #38bdf8; text-decoration: none;">Terms & Conditions</a></p>
-            <p style="margin: 5px 0;"><a href="#" onclick="openModal('contactModal')" style="color: #38bdf8; text-decoration: none;">Contact Us</a></p>
-            <p style="margin: 5px 0;"><a href="#" onclick="openModal('refundModal')" style="color: #38bdf8; text-decoration: none;">Cancellation & Refund Policy</a></p>
-        </div>
-    </div>
-    <hr style="border: 0; border-top: 1px solid #334155; margin: 20px 0;">
-    <p style="font-size: 13px; color: #94a3b8;">&copy; 2026 ApTypingPro. All rights reserved.</p>
-</footer>
-
-<!-- Modals for Legal Pages -->
-<div id="privacyModal" class="legal-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:1000; overflow-y:auto; padding:20px;">
-    <div style="background:#fff; color:#333; max-width:700px; margin:50px auto; padding:30px; border-radius:8px; position:relative;">
-        <h2>Privacy Policy</h2>
-        <p>At ApTypingPro, accessible from aptypingpro.onrender.com, we respect your privacy. This Privacy Policy document contains types of information that is collected and recorded by ApTypingPro and how we use it.</p>
-        <h3>Information We Collect</h3>
-        <p>We collect basic information such as your name, email address during registration, and typing test scores to provide leaderboards and performance history.</p>
-        <button onclick="closeModal('privacyModal')" style="background:#ef4444; color:#fff; border:none; padding:10px 20px; border-radius:5px; cursor:pointer; margin-top:20px;">Close</button>
-    </div>
-</div>
-
-<div id="termsModal" class="legal-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:1000; overflow-y:auto; padding:20px;">
-    <div style="background:#fff; color:#333; max-width:700px; margin:50px auto; padding:30px; border-radius:8px; position:relative;">
-        <h2>Terms & Conditions</h2>
-        <p>Welcome to ApTypingPro! These terms and conditions outline the rules and regulations for the use of our website.</p>
-        <p>By accessing this website we assume you accept these terms and conditions. Do not continue to use ApTypingPro if you do not agree to all of the terms stated on this page.</p>
-        <button onclick="closeModal('termsModal')" style="background:#ef4444; color:#fff; border:none; padding:10px 20px; border-radius:5px; cursor:pointer; margin-top:20px;">Close</button>
-    </div>
-</div>
-
-<div id="contactModal" class="legal-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:1000; overflow-y:auto; padding:20px;">
-    <div style="background:#fff; color:#333; max-width:700px; margin:50px auto; padding:30px; border-radius:8px; position:relative;">
-        <h2>Contact Us</h2>
-        <p>If you have any questions or queries about our services, payments, or account issues, you can reach out to us:</p>
-        <p><strong>Email:</strong> aptypingpro@gmail.com</p>
-        <p><strong>Platform:</strong> ApTypingPro Online Services</p>
-        <button onclick="closeModal('contactModal')" style="background:#ef4444; color:#fff; border:none; padding:10px 20px; border-radius:5px; cursor:pointer; margin-top:20px;">Close</button>
-    </div>
-</div>
-
-<div id="refundModal" class="legal-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:1000; overflow-y:auto; padding:20px;">
-    <div style="background:#fff; color:#333; max-width:700px; margin:50px auto; padding:30px; border-radius:8px; position:relative;">
-        <h2>Cancellation & Refund Policy</h2>
-        <p>Since ApTypingPro offers digital premium typing features and subscriptions, once a plan is purchased via Razorpay, it is generally non-refundable unless there was a technical duplicate transaction error.</p>
-        <button onclick="closeModal('refundModal')" style="background:#ef4444; color:#fff; border:none; padding:10px 20px; border-radius:5px; cursor:pointer; margin-top:20px;">Close</button>
-    </div>
-</div>
-
-<script>
-    function openModal(modalId) {
-        document.getElementById(modalId).style.display = 'block';
-    }
-    function closeModal(modalId) {
-        document.getElementById(modalId).style.display = 'none';
-    }
-</script>
-<!-- AI Support Chatbot Widget -->
-<div id="ai-chat-widget" style="position: fixed; bottom: 20px; right: 20px; z-index: 9999;">
-    <button id="chat-toggle-btn" onclick="toggleChat()" style="background: #2563eb; color: white; border: none; border-radius: 50px; padding: 12px 20px; cursor: pointer; font-weight: bold; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">💬 Need Help?</button>
     
-    <div id="chat-box" style="display: none; width: 320px; height: 400px; background: white; border-radius: 12px; box-shadow: 0 5px 20px rgba(0,0,0,0.2); display: flex; flex-direction: column; overflow: hidden; margin-bottom: 10px;">
-        <div style="background: #2563eb; color: white; padding: 12px; font-weight: bold; display: flex; justify-content: space-between; align-items: center;">
-            <span>ApTypingPro AI Assistant</span>
-            <span onclick="toggleChat()" style="cursor: pointer; font-size: 18px;">&times;</span>
+    <!-- Footer & Legal Links -->
+    <footer style="background: #1e293b; color: #cbd5e1; padding: 30px 20px; text-align: center; margin-top: 50px; font-family: sans-serif;">
+        <div style="max-width: 1000px; margin: 0 auto; display: flex; flex-wrap: wrap; justify-content: space-around; gap: 20px;">
+            <div>
+                <h3 style="color: #fff; margin-bottom: 10px;">ApTypingPro</h3>
+                <p style="font-size: 14px;">India's Advanced Typing Practice & Speed Test Platform.</p>
+            </div>
+            <div>
+                <h4 style="color: #fff; margin-bottom: 10px;">Quick Links</h4>
+                <p style="margin: 5px 0;"><a href="#" onclick="openModal('privacyModal')" style="color: #38bdf8; text-decoration: none;">Privacy Policy</a></p>
+                <p style="margin: 5px 0;"><a href="#" onclick="openModal('termsModal')" style="color: #38bdf8; text-decoration: none;">Terms & Conditions</a></p>
+                <p style="margin: 5px 0;"><a href="#" onclick="openModal('contactModal')" style="color: #38bdf8; text-decoration: none;">Contact Us</a></p>
+                <p style="margin: 5px 0;"><a href="#" onclick="openModal('refundModal')" style="color: #38bdf8; text-decoration: none;">Cancellation & Refund Policy</a></p>
+            </div>
         </div>
-        <div id="chat-messages" style="flex: 1; padding: 12px; overflow-y: auto; font-size: 14px; color: #333; display: flex; flex-direction: column; gap: 8px;">
-            <div style="background: #f1f5f9; padding: 8px 12px; border-radius: 8px; max-width: 80%;">Hello! How can I help you with your typing practice or account today?</div>
-        </div>
-        <div style="padding: 10px; border-top: 1px solid #e2e8f0; display: flex; gap: 5px;">
-            <input type="text" id="chat-input" placeholder="Type your question..." style="flex: 1; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; outline: none; font-size: 14px;" onkeypress="handleKeyPress(event)">
-            <button onclick="sendMessage()" style="background: #2563eb; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer;">Send</button>
+        <hr style="border: 0; border-top: 1px solid #334155; margin: 20px 0;">
+        <p style="font-size: 13px; color: #94a3b8;">&copy; 2026 ApTypingPro. All rights reserved.</p>
+    </footer>
+
+    <!-- Modals for Legal Pages -->
+    <div id="privacyModal" class="legal-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:1000; overflow-y:auto; padding:20px;">
+        <div style="background:#fff; color:#333; max-width:700px; margin:50px auto; padding:30px; border-radius:8px; position:relative;">
+            <h2>Privacy Policy</h2>
+            <p>At ApTypingPro, accessible from aptypingpro.onrender.com, we respect your privacy. This Privacy Policy document contains types of information that is collected and recorded by ApTypingPro and how we use it.</p>
+            <h3>Information We Collect</h3>
+            <p>We collect basic information such as your name, email address during registration, and typing test scores to provide leaderboards and performance history.</p>
+            <button onclick="closeModal('privacyModal')" style="background:#ef4444; color:#fff; border:none; padding:10px 20px; border-radius:5px; cursor:pointer; margin-top:20px;">Close</button>
         </div>
     </div>
-</div>
 
-<script>
-    function toggleChat() {
-        const box = document.getElementById('chat-box');
-        box.style.display = box.style.display === 'none' || box.style.display === '' ? 'flex' : 'none';
-    }
+    <div id="termsModal" class="legal-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:1000; overflow-y:auto; padding:20px;">
+        <div style="background:#fff; color:#333; max-width:700px; margin:50px auto; padding:30px; border-radius:8px; position:relative;">
+            <h2>Terms & Conditions</h2>
+            <p>Welcome to ApTypingPro! These terms and conditions outline the rules and regulations for the use of our website.</p>
+            <button onclick="closeModal('termsModal')" style="background:#ef4444; color:#fff; border:none; padding:10px 20px; border-radius:5px; cursor:pointer; margin-top:20px;">Close</button>
+        </div>
+    </div>
 
-    function handleKeyPress(e) {
-        if (e.key === 'Enter') sendMessage();
-    }
+    <div id="contactModal" class="legal-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:1000; overflow-y:auto; padding:20px;">
+        <div style="background:#fff; color:#333; max-width:700px; margin:50px auto; padding:30px; border-radius:8px; position:relative;">
+            <h2>Contact Us</h2>
+            <p>If you have any questions or queries about our services, payments, or account issues, you can reach out to us:</p>
+            <p><strong>Email:</strong> aptypingpro@gmail.com</p>
+            <button onclick="closeModal('contactModal')" style="background:#ef4444; color:#fff; border:none; padding:10px 20px; border-radius:5px; cursor:pointer; margin-top:20px;">Close</button>
+        </div>
+    </div>
 
-    function sendMessage() {
-        const input = document.getElementById('chat-input');
-        const text = input.value.trim();
-        if (!text) return;
+    <div id="refundModal" class="legal-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:1000; overflow-y:auto; padding:20px;">
+        <div style="background:#fff; color:#333; max-width:700px; margin:50px auto; padding:30px; border-radius:8px; position:relative;">
+            <h2>Cancellation & Refund Policy</h2>
+            <p>Since ApTypingPro offers digital premium typing features and subscriptions, once purchased via Razorpay, it is non-refundable unless there was a duplicate transaction error.</p>
+            <button onclick="closeModal('refundModal')" style="background:#ef4444; color:#fff; border:none; padding:10px 20px; border-radius:5px; cursor:pointer; margin-top:20px;">Close</button>
+        </div>
+    </div>
 
-        const messages = document.getElementById('chat-messages');
-        
-        // User message
-        messages.innerHTML += `<div style="background: #2563eb; color: white; padding: 8px 12px; border-radius: 8px; max-width: 80%; align-self: flex-end;">${text}</div>`;
-        input.value = '';
-        messages.scrollTop = messages.scrollHeight;
-
-        // AI Automated Logic / Smart Responses
-        setTimeout(() => {
-            let reply = "For any payment or account issues, please check our footer policies or contact support at aptypingpro@gmail.com.";
-            const lower = text.toLowerCase();
-            
-            if (lower.includes('hello') || lower.includes('hi')) {
-                reply = "Hi there! Welcome to ApTypingPro. How can I assist you with your typing test?";
-            } else if (lower.includes('price') || lower.includes('cost') || lower.includes('plan') || lower.includes('subscription')) {
-                reply = "We offer affordable premium plans for advanced typing tests and speed analytics. Check the pricing section on the homepage!";
-            } else if (lower.includes('refund') || lower.includes('cancel')) {
-                reply = "Please check our Cancellation & Refund Policy linked in the website footer for complete details.";
-            } else if (lower.includes('contact') || lower.includes('email') || lower.includes('support')) {
-                reply = "You can reach our automated support anytime right here, or via email at aptypingpro@gmail.com.";
-            }
-
-            messages.innerHTML += `<div style="background: #f1f5f9; padding: 8px 12px; border-radius: 8px; max-width: 80%;">${reply}</div>`;
-            messages.scrollTop = messages.scrollHeight;
-        }, 600);
-    }
-</script>
+    <script>
+        function openModal(modalId) { document.getElementById(modalId).style.display = 'block'; }
+        function closeModal(modalId) { document.getElementById(modalId).style.display = 'none'; }
+    </script>
 </body>
 </html>

@@ -152,18 +152,15 @@ app.post('/api/add-test', async (req, res) => {
         const DEVELOPER_EMAIL = "aptypingpro@gmail.com";
         const isAdmin = (createdByEmail === DEVELOPER_EMAIL);
 
-        // Check if user is registered in database to verify premium status if not admin
         const user = await User.findOne({ email: createdByEmail });
         const isUserPremium = user ? (user.isPremium || user.subscriptionType === 'institute' || user.subscriptionType === 'basic') : false;
 
-        // Agar na toh Admin hai aur na hi Premium user, toh test add karne se roko
         if (!isAdmin && !isUserPremium) {
             return res.status(403).json({ success: false, error: "Access Denied! Free users test add nahi kar sakte." });
         }
 
         let newTest;
         if (isAdmin) {
-            // Admin ke liye public, free/premium ya live tests publish karne ki poori chhoot
             newTest = new Test({
                 title,
                 content,
@@ -174,7 +171,6 @@ app.post('/api/add-test', async (req, res) => {
                 isPublic: true
             });
         } else {
-            // Premium user ke liye personal test save hoga
             newTest = new Test({
                 title,
                 content,
@@ -237,10 +233,10 @@ app.get('/api/user-scores/:email', async (req, res) => {
     }
 });
 
-// 7. Secure Razorpay Payment Integration
+// 7. Secure Razorpay Live Payment Integration (Updated with your Live Keys)
 const razorpay = new Razorpay({
-    key_id: process.env.RAZORPAY_KEY_ID || 'rzp_test_TFneVtXlBSsmMM',    
-    key_secret: process.env.RAZORPAY_KEY_SECRET || 'PLGJAO9q9n8Xr837eGDjePaD'   
+    key_id: process.env.RAZORPAY_KEY_ID || 'rzp_live_TKQs9AFoc6XT89',    
+    key_secret: process.env.RAZORPAY_KEY_SECRET || 'mN6KOt3iF15YWccr0MClL5ww'   
 });
 
 app.post('/create-order', async (req, res) => {
