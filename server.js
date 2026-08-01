@@ -35,7 +35,7 @@ const testSchema = new mongoose.Schema({
     content: { type: String, required: true }, 
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: false }, 
     createdByEmail: { type: String, default: "aptypingpro@gmail.com" },
-    isAdminTest: { type: Boolean, default: true },
+    isAdminTest: { type: Boolean, default: false },
     isPublic: { type: Boolean, default: true }, 
     isPremium: { type: Boolean, default: false },
     isLive: { type: Boolean, default: false }, // Admin control for Live AIR Contests
@@ -145,28 +145,49 @@ app.post('/api/save-score', async (req, res) => {
     }
 });
 
-// 2. Add New Test Route (Strict Admin Protection & Live Control)
+// 2. Add New Test Route (Smart Security: Admin vs Premium Users)
 app.post('/api/add-test', async (req, res) => {
     try {
         const { title, content, isPremium, isLive, createdByEmail } = req.body;
         const DEVELOPER_EMAIL = "aptypingpro@gmail.com";
-        
-        // Strict Security Check: Sirf developer hi naye ya live tests add kar sakta hai
-        if (createdByEmail !== DEVELOPER_EMAIL) {
-            return res.status(403).json({ success: false, error: "Access Denied! Sirf Admin hi test publish kar sakta hai." });
+        const isAdmin = (createdByEmail === DEVELOPER_EMAIL);
+
+        // Check if user is registered in database to verify premium status if not admin
+        const user = await User.findOne({ email: createdByEmail });
+        const isUserPremium = user ? (user.isPremium || user.subscriptionType === 'institute' || user.subscriptionType === 'basic') : false;
+
+        // Agar na toh Admin hai aur na hi Premium user, toh test add karne se roko
+        if (!isAdmin && !isUserPremium) {
+            return res.status(403).json({ success: false, error: "Access Denied! Free users test add nahi kar sakte." });
         }
 
-        const newTest = new Test({
-            title,
-            content,
-            isPremium: isPremium || false,
-            isLive: isLive || false,
-            createdByEmail: DEVELOPER_EMAIL,
-            isAdminTest: true,
-            isPublic: true
-        });
+        let newTest;
+        if (isAdmin) {
+            // Admin ke liye public, free/premium ya live tests publish karne ki poori chhoot
+            newTest = new Test({
+                title,
+                content,
+                isPremium: isPremium || false,
+                isLive: isLive || false,
+                createdByEmail: DEVELOPER_EMAIL,
+                isAdminTest: true,
+                isPublic: true
+            });
+        } else {
+            // Premium user ke liye personal test save hoga
+            newTest = new Test({
+                title,
+                content,
+                isPremium: false,
+                isLive: false,
+                createdByEmail: createdByEmail,
+                isAdminTest: false,
+                isPublic: true
+            });
+        }
+
         await newTest.save();
-        console.log("Admin ne naya test database mein save kiya:", title);
+        console.log("Naya test database mein save ho gaya:", title);
         res.status(201).json({ success: true, message: "Test successfully add ho gaya!" });
     } catch (error) {
         console.log("Test add karne mein error:", error);

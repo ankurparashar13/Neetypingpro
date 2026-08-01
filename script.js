@@ -590,13 +590,21 @@ function closeResultModal() {
 }
 
 // ==========================================
-// BACKEND SYNC: STRICT ADMIN ADD TEST & LIVE CONTROL
+// BACKEND SYNC: SMART ADD TEST (ADMIN & PREMIUM USERS)
 // ==========================================
 async function submitNewTest() {
     const currentUserEmail = localStorage.getItem('user_email') || "";
+    if (!currentUserEmail) {
+        alert("Kripya pehle login karein!");
+        return;
+    }
 
-    if (currentUserEmail !== DEVELOPER_EMAIL) {
-        alert("Access Denied! Yeh feature sirf Admin (aptypingpro@gmail.com) ke liye hai.");
+    const isPremOrAdmin = isUserSuperAdminOrPremium();
+    const isAdmin = (currentUserEmail === DEVELOPER_EMAIL);
+
+    // Agar user Free plan par hai (na admin hai na premium), toh block kar do
+    if (!isPremOrAdmin) {
+        alert("Access Denied! Free users test add nahi kar sakte. Test add karne ke liye Premium plan lein.");
         return;
     }
 
@@ -607,8 +615,10 @@ async function submitNewTest() {
 
     const title = titleInput ? titleInput.value.trim() : '';
     const content = contentInput ? contentInput.value.trim() : '';
-    const isPremium = premiumInput ? premiumInput.checked : false;
-    const isLive = liveInput ? liveInput.checked : false;
+    
+    // Sirf Admin ke liye checkboxes active rahenge
+    const isPremium = (isAdmin && premiumInput) ? premiumInput.checked : false;
+    const isLive = (isAdmin && liveInput) ? liveInput.checked : false;
 
     if (!title || !content) {
         alert("Bhai, कृपया Title aur Content dono bharein!");
@@ -630,7 +640,7 @@ async function submitNewTest() {
         
         const data = await response.json();
         if(data.success) {
-            alert("Test successfully database mein publish ho gaya! 🚀");
+            alert(isAdmin ? "Test successfully database mein publish ho gaya! 🚀" : "Aapka personal test save ho gaya! 📝");
             if (titleInput) titleInput.value = '';
             if (contentInput) contentInput.value = '';
             if (premiumInput) premiumInput.checked = false;
