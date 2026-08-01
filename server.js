@@ -20,10 +20,14 @@ const userSchema = new mongoose.Schema({
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     isPremium: { type: Boolean, default: false },
+    subscriptionType: { type: String, default: 'basic' }, // 'basic' (₹99) ya 'institute' (₹999)
     subscriptionExpiry: { type: Date, default: null },
     createdAt: { type: Date, default: Date.now }
 });
 const User = mongoose.model('User', userSchema);
+
+// Active Sessions Tracker for Device Limits (In-memory store)
+const activeSessions = {}; // { userEmail: [deviceId1, deviceId2, ...] }
 
 // 2. Test Schema (Data Privacy & Custom Tests with Creator Info)
 const testSchema = new mongoose.Schema({
@@ -73,8 +77,57 @@ mongoose.connect(mongoURI)
     .catch((err) => console.log("Database connection error: ", err));
 
 // ==========================================
-// API ROUTES (Score, Tests, Auth, OTP & Payments)
+// API ROUTES (Score, Tests, Auth, OTP, Payments & Login Device Control)
 // ==========================================
+
+// 0. Secure Login Route with Device Limit Control
+app.post('/api/login', async (req, res) => {
+    try {
+        const { email, password, deviceId } = req.body;
+        const user = await User.findOne({ email });
+
+        if (!user || user.password !== password) {
+            return res.status(400).json({ success: false, error: "Invalid email or password" });
+        }
+
+        if (!activeSessions[email]) {
+            activeSessions[email] = [];
+        }
+
+        const currentDevices = activeSessions[email];
+
+        // Agar yeh device pehle se logged-in hai toh allow kar do
+        if (currentDevices.includes(deviceId)) {
+            return res.json({ success: true, message: "Login successful", user });
+        }
+
+        // Plan limits: Basic/Student (₹99) = 1 PC, Institute (₹999) = 10 PCs
+        const maxLimit = (user.subscriptionType === 'institute') ? 10 : 1;
+
+        if (currentDevices.length >= maxLimit) {
+            return res.status(403).json({ 
+                success: false, 
+                error: `Device limit reached! Your plan allows maximum ${maxLimit} active login(s). Please logout from another device or upgrade to the Institute plan.` 
+            });
+        }
+
+        // Naya device register karein
+        currentDevices.push(deviceId);
+        res.json({ success: true, message: "Login successful", user });
+    } catch (error) {
+        console.error("Login error:", error);
+        res.status(500).json({ success: false, error: "Login failed due to server error" });
+    }
+});
+
+// Logout Route
+app.post('/api/logout', (req, res) => {
+    const { email, deviceId } = req.body;
+    if (activeSessions[email]) {
+        activeSessions[email] = activeSessions[email].filter(id => id !== deviceId);
+    }
+    res.json({ success: true, message: "Logged out successfully" });
+});
 
 // 1. Save Score Route
 app.post('/api/save-score', async (req, res) => {
@@ -209,7 +262,6 @@ app.post('/send-otp', async (req, res) => {
         res.json({ message: "OTP sent successfully to email!", success: true });
     } catch (error) {
         console.error("Email sending error:", error);
-        // Fallback agar mail na jaye toh developer mode ke liye dummy success
         res.json({ message: "OTP sent (Fallback Mode 123456)", success: true });
         otpStorage[email] = "123456";
     }
@@ -218,7 +270,7 @@ app.post('/send-otp', async (req, res) => {
 app.post('/verify-otp-reset', async (req, res) => {
     const { email, otp } = req.body;
     if (otpStorage[email] && otpStorage[email] === otp) {
-        delete otpStorage[email]; // OTP use hone ke baad delete kar do
+        delete otpStorage[email];
         res.json({ success: true, message: "Password successfully updated!" });
     } else {
         res.status(400).json({ success: false, message: "Invalid or Expired OTP" });
@@ -233,7 +285,7 @@ app.post('/api/competition/submit', async (req, res) => {
         if (!competition) return res.status(404).json({ error: "Competition nahi mila" });
 
         competition.participants.push({ userEmail, userName, wpm, accuracy });
-        competition.participants.sort((a, b) => b.wpm - a.wpm); // Sort by highest WPM for AIR
+        competition.participants.sort((a, b) => b.wpm - a.wpm);
         await competition.save();
 
         const rank = competition.participants.findIndex(p => p.userEmail === userEmail) + 1;

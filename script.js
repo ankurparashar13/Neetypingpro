@@ -69,6 +69,18 @@ let currentTestFolder = 'free'; // Default folder view ('free' or 'premium')
 const DEVELOPER_EMAIL = "ankurparashar1312@gmail.com";
 
 // ==========================================
+// UNIQUE DEVICE FINGERPRINTING FOR LOGIN LIMIT
+// ==========================================
+function getDeviceId() {
+    let deviceId = localStorage.getItem('device_uuid');
+    if (!deviceId) {
+        deviceId = 'dev_' + Math.random().toString(36).substring(2) + Date.now();
+        localStorage.setItem('device_uuid', deviceId);
+    }
+    return deviceId;
+}
+
+// ==========================================
 // INITIALIZATION & AUTHENTICATION
 // ==========================================
 window.onload = function() {
@@ -78,20 +90,42 @@ window.onload = function() {
 
     const loginForm = document.getElementById('login-form');
     if (loginForm) {
-       loginForm.onsubmit = function(e) {
+       loginForm.onsubmit = async function(e) {
             e.preventDefault();
-            const emailInput = document.getElementById('login-email').value.trim();
-            localStorage.setItem('user_email', emailInput);
-            localStorage.setItem('is_logged_in', 'true');
+            const email = document.getElementById('login-email').value.trim();
+            const password = document.getElementById('login-password').value.trim();
+            const deviceId = getDeviceId();
 
-            if (!localStorage.getItem('sub_start')) {
-                localStorage.setItem('sub_start', new Date().toLocaleDateString());
-                let futureDate = new Date();
-                futureDate.setMonth(futureDate.getMonth() + 1); // Default 1 month
-                localStorage.setItem('sub_end', futureDate.toLocaleDateString());
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password, deviceId })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    alert("Login successful! 🎉");
+                    localStorage.setItem('user_email', email);
+                    localStorage.setItem('is_logged_in', 'true');
+                    localStorage.setItem('user_data', JSON.stringify(data.user));
+
+                    if (!localStorage.getItem('sub_start')) {
+                        localStorage.setItem('sub_start', new Date().toLocaleDateString());
+                        let futureDate = new Date();
+                        futureDate.setMonth(futureDate.getMonth() + 1); // Default 1 month
+                        localStorage.setItem('sub_end', futureDate.toLocaleDateString());
+                    }
+
+                    hideLoginShowHome(); 
+                } else {
+                    alert(data.error || "Login failed! Device limit may have been reached.");
+                }
+            } catch (err) {
+                console.error("Login request error:", err);
+                alert("Server error during login. Kripya fir se koshish karein.");
             }
-
-            hideLoginShowHome(); 
         };
     }
     loadTestCategories();
@@ -599,7 +633,7 @@ async function submitNewTest() {
         }
     } catch (err) {
         console.log("Server error:", err);
-        alert("Server se connect nahi ho pa raha hai.");
+        alert("Server से connect nahi ho pa raha hai.");
     }
 }
 
@@ -642,10 +676,27 @@ function loadSettingsProfile() {
     loadHistory(); 
 }
 
-function logoutUser() {
+async function logoutUser() {
     const confirmLogout = confirm("Kya aap logout karna chahte hain?");
     if (confirmLogout) {
+        const email = localStorage.getItem('user_email');
+        const deviceId = getDeviceId();
+
+        if (email) {
+            try {
+                await fetch(`${BACKEND_URL}/api/logout`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, deviceId })
+                });
+            } catch (e) {
+                console.error("Logout sync error", e);
+            }
+        }
+
         localStorage.removeItem('is_logged_in');
+        localStorage.removeItem('user_email');
+        localStorage.removeItem('user_data');
         location.reload();
     }
 }

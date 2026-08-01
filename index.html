@@ -16,7 +16,7 @@
     <div id="login-page" class="login-container">
         <div class="login-box">
             <h2>ApTypingPro Login</h2>
-            <form id="login-form">
+            <form id="login-form" onsubmit="handleUserLogin(event)">
                 <input type="email" placeholder="Email ID" id="login-email" required>
                 <input type="password" placeholder="Password" id="login-password" required>
                 <button type="submit" id="login-btn">Login</button>
@@ -156,7 +156,7 @@
                             </tr>
                         </thead>
                         <tbody id="leaderboard-body">
-                            <!-- Data yahan JS se aayega -->
+                            <!-- Data yahan JS से aayega -->
                         </tbody>
                     </table>
                 </div>
