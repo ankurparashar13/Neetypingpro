@@ -87,7 +87,7 @@ window.onload = function() {
             if (!localStorage.getItem('sub_start')) {
                 localStorage.setItem('sub_start', new Date().toLocaleDateString());
                 let futureDate = new Date();
-                futureDate.setFullYear(futureDate.getFullYear() + 1);
+                futureDate.setMonth(futureDate.getMonth() + 1); // Default 1 month
                 localStorage.setItem('sub_end', futureDate.toLocaleDateString());
             }
 
@@ -724,7 +724,7 @@ function loadLeaderboard() {
 }
 
 // ==========================================
-// PREMIUM & RAZORPAY PAYMENT LOGIC
+// PREMIUM & RAZORPAY PAYMENT LOGIC (UPDATED PLANS)
 // ==========================================
 async function selectPlan(amountInRupees, planName) {
     const userEmail = localStorage.getItem('user_email') || "user@gmail.com";
@@ -754,10 +754,8 @@ async function selectPlan(amountInRupees, planName) {
                 let startDate = new Date();
                 let endDate = new Date();
                 
-                if (amountInRupees === 79) endDate.setMonth(endDate.getMonth() + 1);
-                else if (amountInRupees === 199) endDate.setMonth(endDate.getMonth() + 3);
-                else if (amountInRupees === 299) endDate.setMonth(endDate.getMonth() + 6);
-                else if (amountInRupees === 399) endDate.setFullYear(endDate.getFullYear() + 1);
+                // Sabhi plans ab 1 Month (30 Days) ke liye valid rahenge
+                endDate.setMonth(endDate.getMonth() + 1);
 
                 localStorage.setItem('sub_start', startDate.toLocaleDateString());
                 localStorage.setItem('sub_end', endDate.toLocaleDateString());
@@ -801,7 +799,7 @@ function handleSignup() {
     localStorage.setItem('is_logged_in', 'true');
     localStorage.setItem('sub_start', new Date().toLocaleDateString());
     let futureDate = new Date(); 
-    futureDate.setFullYear(futureDate.getFullYear() + 1);
+    futureDate.setMonth(futureDate.getMonth() + 1);
     localStorage.setItem('sub_end', futureDate.toLocaleDateString());
     
     alert("Account successfully created & registered!");
