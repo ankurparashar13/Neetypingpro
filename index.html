@@ -181,7 +181,7 @@
                     <div style="background: #fff; padding: 20px; border-radius: 8px; border: 1px solid #ddd; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
                         <h3 style="color: #2d3436; margin-top: 0;">Delhi High Court Open Speed Challenge #1</h3>
                         <p style="color: #636e72; font-size: 14px;">Status: <span style="color: #27ae60; font-weight: bold;">LIVE NOW</span></p>
-                        <button onclick="alert('Contest system active! Aap leaderboard se apne scores track kar sakte hain.')" class="submit-btn" style="padding: 10px 20px; background: #00cec9; color: #fff; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">Join Contest 🚀</button>
+                        <button onclick="joinLiveContest()" class="submit-btn" style="padding: 10px 20px; background: #00cec9; color: #fff; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">Join Contest 🚀</button>
                     </div>
                 </div>
             </div>
@@ -345,6 +345,23 @@
             <button onclick="closeResultModal()" style="width: 100%; padding: 15px; background-color: #6a0dad; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 18px; font-weight: bold; transition: 0.3s;">Close & Return to Dashboard</button>
         </div>
     </div>
+
+    <!-- Helper script for Live Contest start -->
+    <script>
+        function joinLiveContest() {
+            const contestTest = {
+                title: "Delhi High Court Open Speed Challenge #1",
+                language: "english",
+                category: "Legal Contest",
+                content: "The appellant has approached this Court challenging the order passed by the learned trial judge. It is an admitted fact that the property in dispute was jointly owned by the predecessors of the parties. The core issue revolves around the interpretation of the sale deed executed on the aforementioned date. The respondent's counsel vehemently argued that the limitation period had already expired, rendering the suit non-maintainable. However, referring to the precedents set by the Apex Court in similar matters, it is evident that the cause of action is a continuous one."
+            };
+            if (typeof startTest === 'function') {
+                startTest(contestTest);
+            } else {
+                alert("Test engine loading... Kripya ek baar page refresh kar lein.");
+            }
+        }
+    </script>
 
     <script src="script.js"></script>
 </body>
