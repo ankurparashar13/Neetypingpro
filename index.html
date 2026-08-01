@@ -83,8 +83,8 @@
                     <li onclick="switchTab('home')" style="cursor: pointer;">🏠 Home</li>
                     <li onclick="switchTab('typing-tests')" style="cursor: pointer;">⌨️ Typing Test</li>
                     <li onclick="switchTab('contests')" style="cursor: pointer; color: #00cec9;">⚡ Live Contests (AIR)</li>
-                    <!-- Add Test tab sirf Master Admin ko dikhega, baki users ke liye hidden rahega -->
-                    <li id="sidebar-add-test-btn" onclick="switchTab('add-test')" style="cursor: pointer; display: none;">📄 Add Test</li>
+                    <!-- Add Test tab ab sabhi ko dikhega -->
+                    <li onclick="switchTab('add-test')" style="cursor: pointer;">📄 Add Test</li>
                     <li onclick="switchTab('premium')" style="cursor: pointer; color: #ffeb3b;">💎 Premium (Buy Now)</li>
                     <li onclick="toggleDarkMode()" style="cursor: pointer;">🌙 Dark Mode</li>
                     <li onclick="switchTab('settings')" style="cursor: pointer;">⚙️ Settings</li>
@@ -189,7 +189,7 @@
                 </div>
             </div>
 
-            <!-- Tab 4: Add Custom Test (Only for Master Admin) -->
+            <!-- Tab 4: Add Custom Test -->
             <div id="tab-add-test" class="tab-pane" style="display: none;">
                 <h1>Add Your Own Custom Typing Test</h1>
                 <div class="add-test-box" style="margin-top: 20px; display: flex; flex-direction: column; gap: 15px; max-width: 600px;">
@@ -355,7 +355,7 @@
         </div>
     </div>
 
-    <!-- Helper script for Live Contest start with Mandatory Ad Integration for Everyone -->
+    <!-- Helper script for Live Contest start with Mandatory Ad Integration -->
     <script>
         function joinLiveContest() {
             const contestTest = {
@@ -365,7 +365,6 @@
                 isLive: true,
                 content: "The appellant has approached this Court challenging the order passed by the learned trial judge. It is an admitted fact that the property in dispute was jointly owned by the predecessors of the parties. The core issue revolves around the interpretation of the sale deed executed on the aforementioned date. The respondent's counsel vehemently argued that the limitation period had already expired, rendering the suit non-maintainable. However, referring to the precedents set by the Apex Court in similar matters, it is evident that the cause of action is a continuous one."
             };
-            // Live contest ke liye mandatory ad sabhi ke liye chalega (chahe free ho ya premium)
             if (typeof showPreTestAd === 'function') {
                 showPreTestAd(contestTest);
             } else if (typeof startTest === 'function') {

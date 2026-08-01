@@ -131,7 +131,6 @@ window.onload = function() {
     loadTestCategories();
     loadLeaderboard();
     manageAdsVisibility();
-    checkAdminPermissions();
 };
 
 window.addEventListener('DOMContentLoaded', () => {
@@ -139,7 +138,6 @@ window.addEventListener('DOMContentLoaded', () => {
     if (typeof loadSettingsProfile === 'function') loadSettingsProfile();
     loadTestCategories();
     manageAdsVisibility();
-    checkAdminPermissions();
 });
 
 function hideLoginShowHome() {
@@ -149,33 +147,12 @@ function hideLoginShowHome() {
     if (homeScreen) homeScreen.style.display = 'flex';
     switchTab('home');
     manageAdsVisibility();
-    checkAdminPermissions();
-}
-
-// Function to check and restrict Admin-only UI elements
-function checkAdminPermissions() {
-    const userEmail = localStorage.getItem('user_email');
-    const addTestSidebarBtn = document.getElementById('sidebar-add-test-btn');
-    if (addTestSidebarBtn) {
-        if (userEmail === "aptypingpro@gmail.com") {
-            addTestSidebarBtn.style.display = 'block'; // Sirf admin ko dikhega
-        } else {
-            addTestSidebarBtn.style.display = 'none';  // Free/normal users ke liye hidden rahega
-        }
-    }
 }
 
 // ==========================================
 // TAB SWITCHING & FOLDER NAVIGATION
 // ==========================================
 function switchTab(tabName) {
-    // Security check: Agar non-admin user galti se 'add-test' kholne ki koshish kare
-    if ((tabName === 'add-test' || tabName === 'tab-add-test') && localStorage.getItem('user_email') !== "aptypingpro@gmail.com") {
-        alert("Access Denied! Yeh feature sirf Admin ke liye hai.");
-        switchTab('home');
-        return;
-    }
-
     if (timer) clearInterval(timer);
 
     const typingPage = document.getElementById('typing-page');
@@ -238,7 +215,7 @@ function switchTestFolder(folderType) {
 
 function isUserSuperAdminOrPremium() {
     const userEmail = localStorage.getItem('user_email');
-    if (userEmail === "aptypingpro@gmail.com") return true;
+    if (userEmail === DEVELOPER_EMAIL) return true;
     return localStorage.getItem('aptypro_premium') === 'true';
 }
 
@@ -617,27 +594,37 @@ function closeResultModal() {
 }
 
 // ==========================================
-// BACKEND SYNC: SMART ADD TEST (ONLY FOR MASTER ADMIN)
+// BACKEND SYNC: SMART ADD TEST (RESTRICTED FOR FREE USERS)
 // ==========================================
 async function submitNewTest() {
     const currentUserEmail = localStorage.getItem('user_email') || "";
-    if (currentUserEmail !== "aptypingpro@gmail.com") {
-        alert("Access Denied! Free users test add nahi kar sakte.");
+    if (!currentUserEmail) {
+        alert("Kripya pehle login karein!");
+        return;
+    }
+
+    // Check karo ki user Admin hai ya Premium plan active hai
+    const isPremOrAdmin = isUserSuperAdminOrPremium();
+
+    if (!isPremOrAdmin) {
+        // Free user ke liye popup jo seedha Premium page par bhej dega
+        alert("🔒 Feature Locked!\n\nApna custom test save karne aur add karne ke liye kripya hamara Premium Plan kharidein.");
+        switchTab('premium'); 
         return;
     }
 
     const titleInput = document.getElementById('new-test-title') || document.getElementById('custom-test-title');
     const contentInput = document.getElementById('new-test-content') || document.getElementById('custom-test-content');
     
-    // Radio button se select karenge ki test Free hai, Premium hai, ya Live AIR Contest hai
     const selectedType = document.querySelector('input[name="test-type-selector"]:checked');
     const testTypeValue = selectedType ? selectedType.value : 'free';
 
     const title = titleInput ? titleInput.value.trim() : '';
     const content = contentInput ? contentInput.value.trim() : '';
 
-    const isPremium = (testTypeValue === 'premium');
-    const isLive = (testTypeValue === 'live');
+    const isAdmin = (currentUserEmail === DEVELOPER_EMAIL);
+    const isPremium = (isAdmin && testTypeValue === 'premium');
+    const isLive = (isAdmin && testTypeValue === 'live');
 
     if (!title || !content) {
         alert("Bhai, कृपया Title aur Content dono bharein!");
@@ -659,7 +646,7 @@ async function submitNewTest() {
         
         const data = await response.json();
         if(data.success) {
-            alert(`Test successfully ${testTypeValue.toUpperCase()} ke roop mein publish ho gaya! 🚀`);
+            alert(isAdmin ? `Test successfully ${testTypeValue.toUpperCase()} ke roop mein publish ho gaya! 🚀` : "Aapka personal test save ho gaya! 📝");
             if (titleInput) titleInput.value = '';
             if (contentInput) contentInput.value = '';
             
@@ -812,7 +799,7 @@ function loadLeaderboard() {
 }
 
 // ==========================================
-// PREMIUM & RAZORPAY LIVE PAYMENT LOGIC (UPDATED WITH LIVE KEYS)
+// PREMIUM & RAZORPAY LIVE PAYMENT LOGIC
 // ==========================================
 async function selectPlan(amountInRupees, planName) {
     const userEmail = localStorage.getItem('user_email') || "user@gmail.com";
@@ -829,7 +816,7 @@ async function selectPlan(amountInRupees, planName) {
         const order = await response.json();
 
         const options = {
-            key: "rzp_live_TKQs9AFoc6XT89", // Aapki asli Razorpay Live Key ID
+            key: "rzp_live_TKQs9AFoc6XT89", 
             amount: order.amount,
             currency: "INR",
             name: "ApTypingPro",
@@ -841,15 +828,13 @@ async function selectPlan(amountInRupees, planName) {
                 
                 let startDate = new Date();
                 let endDate = new Date();
-                
-                // Sabhi plans ab 1 Month (30 Days) ke liye valid rahenge
                 endDate.setMonth(endDate.getMonth() + 1);
 
                 localStorage.setItem('sub_start', startDate.toLocaleDateString());
                 localStorage.setItem('sub_end', endDate.toLocaleDateString());
 
                 alert("Pro Access Unlocked Successfully!");
-                manageAdsVisibility(); // Payment ke baad turant ads gayab ho jayenge
+                manageAdsVisibility(); 
                 switchTab('home');
             },
             prefill: { email: userEmail },
