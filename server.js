@@ -29,15 +29,16 @@ const User = mongoose.model('User', userSchema);
 // Active Sessions Tracker for Device Limits (In-memory store)
 const activeSessions = {}; // { userEmail: [deviceId1, deviceId2, ...] }
 
-// 2. Test Schema (Data Privacy & Custom Tests with Creator Info)
+// 2. Test Schema (Data Privacy & Custom Tests with Creator Info & Live Status)
 const testSchema = new mongoose.Schema({
     title: { type: String, required: true },
     content: { type: String, required: true }, 
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: false }, 
-    createdByEmail: { type: String, default: "ankurparashar1312@gmail.com" },
+    createdByEmail: { type: String, default: "aptypingpro@gmail.com" },
     isAdminTest: { type: Boolean, default: true },
     isPublic: { type: Boolean, default: true }, 
     isPremium: { type: Boolean, default: false },
+    isLive: { type: Boolean, default: false }, // Admin control for Live AIR Contests
     createdAt: { type: Date, default: Date.now }
 });
 const Test = mongoose.model('Test', testSchema);
@@ -144,23 +145,28 @@ app.post('/api/save-score', async (req, res) => {
     }
 });
 
-// 2. Add New Test Route (Updated with Creator Tracking)
+// 2. Add New Test Route (Strict Admin Protection & Live Control)
 app.post('/api/add-test', async (req, res) => {
     try {
-        const { title, content, isPremium, createdByEmail } = req.body;
-        const DEVELOPER_EMAIL = "ankurparashar1312@gmail.com";
-        const isAdmin = (createdByEmail === DEVELOPER_EMAIL);
+        const { title, content, isPremium, isLive, createdByEmail } = req.body;
+        const DEVELOPER_EMAIL = "aptypingpro@gmail.com";
+        
+        // Strict Security Check: Sirf developer hi naye ya live tests add kar sakta hai
+        if (createdByEmail !== DEVELOPER_EMAIL) {
+            return res.status(403).json({ success: false, error: "Access Denied! Sirf Admin hi test publish kar sakta hai." });
+        }
 
         const newTest = new Test({
             title,
             content,
             isPremium: isPremium || false,
-            createdByEmail: createdByEmail || DEVELOPER_EMAIL,
-            isAdminTest: isAdmin,
+            isLive: isLive || false,
+            createdByEmail: DEVELOPER_EMAIL,
+            isAdminTest: true,
             isPublic: true
         });
         await newTest.save();
-        console.log("Naya test database mein save ho gaya:", title);
+        console.log("Admin ne naya test database mein save kiya:", title);
         res.status(201).json({ success: true, message: "Test successfully add ho gaya!" });
     } catch (error) {
         console.log("Test add karne mein error:", error);
@@ -237,7 +243,7 @@ let otpStorage = {}; // Temporary memory for OTP verification
 const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
-        user: process.env.EMAIL_USER || 'ankurparashar1312@gmail.com',
+        user: process.env.EMAIL_USER || 'aptypingpro@gmail.com',
         pass: process.env.EMAIL_PASS || 'YOUR_EMAIL_APP_PASSWORD'
     }
 });
@@ -250,7 +256,7 @@ app.post('/send-otp', async (req, res) => {
     otpStorage[email] = generatedOTP;
 
     const mailOptions = {
-        from: process.env.EMAIL_USER || 'ankurparashar1312@gmail.com',
+        from: process.env.EMAIL_USER || 'aptypingpro@gmail.com',
         to: email,
         subject: 'ApTypingPro - Password Reset OTP',
         text: `Aapka password reset OTP hai: ${generatedOTP}. Yeh 10 minute tak valid hai.`

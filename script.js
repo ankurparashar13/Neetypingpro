@@ -66,7 +66,7 @@ let timerStarted = false;
 let startTime = null;
 let currentTestFolder = 'free'; // Default folder view ('free' or 'premium')
 
-const DEVELOPER_EMAIL = "ankurparashar1312@gmail.com";
+const DEVELOPER_EMAIL = "aptypingpro@gmail.com";
 
 // ==========================================
 // UNIQUE DEVICE FINGERPRINTING FOR LOGIN LIMIT
@@ -590,17 +590,25 @@ function closeResultModal() {
 }
 
 // ==========================================
-// BACKEND SYNC: ADD TEST & DATABASE TESTS
+// BACKEND SYNC: STRICT ADMIN ADD TEST & LIVE CONTROL
 // ==========================================
 async function submitNewTest() {
+    const currentUserEmail = localStorage.getItem('user_email') || "";
+
+    if (currentUserEmail !== DEVELOPER_EMAIL) {
+        alert("Access Denied! Yeh feature sirf Admin (aptypingpro@gmail.com) ke liye hai.");
+        return;
+    }
+
     const titleInput = document.getElementById('new-test-title') || document.getElementById('custom-test-title');
     const contentInput = document.getElementById('new-test-content') || document.getElementById('custom-test-content');
     const premiumInput = document.getElementById('new-test-premium');
+    const liveInput = document.getElementById('new-test-live');
 
     const title = titleInput ? titleInput.value.trim() : '';
     const content = contentInput ? contentInput.value.trim() : '';
     const isPremium = premiumInput ? premiumInput.checked : false;
-    const currentUserEmail = localStorage.getItem('user_email') || DEVELOPER_EMAIL;
+    const isLive = liveInput ? liveInput.checked : false;
 
     if (!title || !content) {
         alert("Bhai, कृपया Title aur Content dono bharein!");
@@ -615,25 +623,27 @@ async function submitNewTest() {
                 title, 
                 content, 
                 isPremium, 
+                isLive,
                 createdByEmail: currentUserEmail 
             })
         });
         
         const data = await response.json();
         if(data.success) {
-            alert("Test successfully add ho gaya database mein! 🚀");
+            alert("Test successfully database mein publish ho gaya! 🚀");
             if (titleInput) titleInput.value = '';
             if (contentInput) contentInput.value = '';
             if (premiumInput) premiumInput.checked = false;
+            if (liveInput) liveInput.checked = false;
             
             loadTestCategories();
             switchTab('typing-tests');
         } else {
-            alert("Error: Test save nahi ho paya.");
+            alert("Error: " + (data.error || "Test save nahi ho paya."));
         }
     } catch (err) {
         console.log("Server error:", err);
-        alert("Server से connect nahi ho pa raha hai.");
+        alert("Server se connect nahi ho pa raha hai.");
     }
 }
 
