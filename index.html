@@ -431,5 +431,66 @@
         document.getElementById(modalId).style.display = 'none';
     }
 </script>
+<!-- AI Support Chatbot Widget -->
+<div id="ai-chat-widget" style="position: fixed; bottom: 20px; right: 20px; z-index: 9999;">
+    <button id="chat-toggle-btn" onclick="toggleChat()" style="background: #2563eb; color: white; border: none; border-radius: 50px; padding: 12px 20px; cursor: pointer; font-weight: bold; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">💬 Need Help?</button>
+    
+    <div id="chat-box" style="display: none; width: 320px; height: 400px; background: white; border-radius: 12px; box-shadow: 0 5px 20px rgba(0,0,0,0.2); display: flex; flex-direction: column; overflow: hidden; margin-bottom: 10px;">
+        <div style="background: #2563eb; color: white; padding: 12px; font-weight: bold; display: flex; justify-content: space-between; align-items: center;">
+            <span>ApTypingPro AI Assistant</span>
+            <span onclick="toggleChat()" style="cursor: pointer; font-size: 18px;">&times;</span>
+        </div>
+        <div id="chat-messages" style="flex: 1; padding: 12px; overflow-y: auto; font-size: 14px; color: #333; display: flex; flex-direction: column; gap: 8px;">
+            <div style="background: #f1f5f9; padding: 8px 12px; border-radius: 8px; max-width: 80%;">Hello! How can I help you with your typing practice or account today?</div>
+        </div>
+        <div style="padding: 10px; border-top: 1px solid #e2e8f0; display: flex; gap: 5px;">
+            <input type="text" id="chat-input" placeholder="Type your question..." style="flex: 1; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; outline: none; font-size: 14px;" onkeypress="handleKeyPress(event)">
+            <button onclick="sendMessage()" style="background: #2563eb; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer;">Send</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    function toggleChat() {
+        const box = document.getElementById('chat-box');
+        box.style.display = box.style.display === 'none' || box.style.display === '' ? 'flex' : 'none';
+    }
+
+    function handleKeyPress(e) {
+        if (e.key === 'Enter') sendMessage();
+    }
+
+    function sendMessage() {
+        const input = document.getElementById('chat-input');
+        const text = input.value.trim();
+        if (!text) return;
+
+        const messages = document.getElementById('chat-messages');
+        
+        // User message
+        messages.innerHTML += `<div style="background: #2563eb; color: white; padding: 8px 12px; border-radius: 8px; max-width: 80%; align-self: flex-end;">${text}</div>`;
+        input.value = '';
+        messages.scrollTop = messages.scrollHeight;
+
+        // AI Automated Logic / Smart Responses
+        setTimeout(() => {
+            let reply = "For any payment or account issues, please check our footer policies or contact support at aptypingpro@gmail.com.";
+            const lower = text.toLowerCase();
+            
+            if (lower.includes('hello') || lower.includes('hi')) {
+                reply = "Hi there! Welcome to ApTypingPro. How can I assist you with your typing test?";
+            } else if (lower.includes('price') || lower.includes('cost') || lower.includes('plan') || lower.includes('subscription')) {
+                reply = "We offer affordable premium plans for advanced typing tests and speed analytics. Check the pricing section on the homepage!";
+            } else if (lower.includes('refund') || lower.includes('cancel')) {
+                reply = "Please check our Cancellation & Refund Policy linked in the website footer for complete details.";
+            } else if (lower.includes('contact') || lower.includes('email') || lower.includes('support')) {
+                reply = "You can reach our automated support anytime right here, or via email at aptypingpro@gmail.com.";
+            }
+
+            messages.innerHTML += `<div style="background: #f1f5f9; padding: 8px 12px; border-radius: 8px; max-width: 80%;">${reply}</div>`;
+            messages.scrollTop = messages.scrollHeight;
+        }, 600);
+    }
+</script>
 </body>
 </html>
