@@ -131,6 +131,7 @@ window.onload = function() {
     loadTestCategories();
     loadLeaderboard();
     manageAdsVisibility();
+    checkAdminPermissions();
 };
 
 window.addEventListener('DOMContentLoaded', () => {
@@ -138,6 +139,7 @@ window.addEventListener('DOMContentLoaded', () => {
     if (typeof loadSettingsProfile === 'function') loadSettingsProfile();
     loadTestCategories();
     manageAdsVisibility();
+    checkAdminPermissions();
 });
 
 function hideLoginShowHome() {
@@ -147,12 +149,33 @@ function hideLoginShowHome() {
     if (homeScreen) homeScreen.style.display = 'flex';
     switchTab('home');
     manageAdsVisibility();
+    checkAdminPermissions();
+}
+
+// Function to check and restrict Admin-only UI elements
+function checkAdminPermissions() {
+    const userEmail = localStorage.getItem('user_email');
+    const addTestSidebarBtn = document.getElementById('sidebar-add-test-btn');
+    if (addTestSidebarBtn) {
+        if (userEmail === "aptypingpro@gmail.com") {
+            addTestSidebarBtn.style.display = 'block'; // Sirf admin ko dikhega
+        } else {
+            addTestSidebarBtn.style.display = 'none';  // Free/normal users ke liye hidden rahega
+        }
+    }
 }
 
 // ==========================================
 // TAB SWITCHING & FOLDER NAVIGATION
 // ==========================================
 function switchTab(tabName) {
+    // Security check: Agar non-admin user galti se 'add-test' kholne ki koshish kare
+    if ((tabName === 'add-test' || tabName === 'tab-add-test') && localStorage.getItem('user_email') !== "aptypingpro@gmail.com") {
+        alert("Access Denied! Yeh feature sirf Admin ke liye hai.");
+        switchTab('home');
+        return;
+    }
+
     if (timer) clearInterval(timer);
 
     const typingPage = document.getElementById('typing-page');
@@ -594,20 +617,12 @@ function closeResultModal() {
 }
 
 // ==========================================
-// BACKEND SYNC: SMART ADD TEST (ADMIN & PREMIUM USERS)
+// BACKEND SYNC: SMART ADD TEST (ONLY FOR MASTER ADMIN)
 // ==========================================
 async function submitNewTest() {
     const currentUserEmail = localStorage.getItem('user_email') || "";
-    if (!currentUserEmail) {
-        alert("Kripya pehle login karein!");
-        return;
-    }
-
-    const isPremOrAdmin = isUserSuperAdminOrPremium();
-    const isAdmin = (currentUserEmail === DEVELOPER_EMAIL);
-
-    if (!isPremOrAdmin) {
-        alert("Access Denied! Free users test add nahi kar sakte. Test add karne ke liye Premium plan lein.");
+    if (currentUserEmail !== "aptypingpro@gmail.com") {
+        alert("Access Denied! Free users test add nahi kar sakte.");
         return;
     }
 
@@ -621,8 +636,8 @@ async function submitNewTest() {
     const title = titleInput ? titleInput.value.trim() : '';
     const content = contentInput ? contentInput.value.trim() : '';
 
-    const isPremium = (isAdmin && testTypeValue === 'premium');
-    const isLive = (isAdmin && testTypeValue === 'live');
+    const isPremium = (testTypeValue === 'premium');
+    const isLive = (testTypeValue === 'live');
 
     if (!title || !content) {
         alert("Bhai, कृपया Title aur Content dono bharein!");
@@ -644,7 +659,7 @@ async function submitNewTest() {
         
         const data = await response.json();
         if(data.success) {
-            alert(isAdmin ? `Test successfully ${testTypeValue.toUpperCase()} ke roop mein publish ho gaya! 🚀` : "Aapka personal test save ho gaya! 📝");
+            alert(`Test successfully ${testTypeValue.toUpperCase()} ke roop mein publish ho gaya! 🚀`);
             if (titleInput) titleInput.value = '';
             if (contentInput) contentInput.value = '';
             
