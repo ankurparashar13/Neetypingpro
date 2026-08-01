@@ -366,5 +366,70 @@
     </script>
 
     <script src="script.js"></script>
+    <!-- Footer & Legal Links (Razorpay Compliance) -->
+<footer style="background: #1e293b; color: #cbd5e1; padding: 30px 20px; text-align: center; margin-top: 50px; font-family: sans-serif;">
+    <div style="max-width: 1000px; margin: 0 auto; display: flex; flex-wrap: wrap; justify-content: space-around; gap: 20px;">
+        <div>
+            <h3 style="color: #fff; margin-bottom: 10px;">ApTypingPro</h3>
+            <p style="font-size: 14px;">India's Advanced Typing Practice & Speed Test Platform.</p>
+        </div>
+        <div>
+            <h4 style="color: #fff; margin-bottom: 10px;">Quick Links</h4>
+            <p style="margin: 5px 0;"><a href="#" onclick="openModal('privacyModal')" style="color: #38bdf8; text-decoration: none;">Privacy Policy</a></p>
+            <p style="margin: 5px 0;"><a href="#" onclick="openModal('termsModal')" style="color: #38bdf8; text-decoration: none;">Terms & Conditions</a></p>
+            <p style="margin: 5px 0;"><a href="#" onclick="openModal('contactModal')" style="color: #38bdf8; text-decoration: none;">Contact Us</a></p>
+            <p style="margin: 5px 0;"><a href="#" onclick="openModal('refundModal')" style="color: #38bdf8; text-decoration: none;">Cancellation & Refund Policy</a></p>
+        </div>
+    </div>
+    <hr style="border: 0; border-top: 1px solid #334155; margin: 20px 0;">
+    <p style="font-size: 13px; color: #94a3b8;">&copy; 2026 ApTypingPro. All rights reserved.</p>
+</footer>
+
+<!-- Modals for Legal Pages -->
+<div id="privacyModal" class="legal-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:1000; overflow-y:auto; padding:20px;">
+    <div style="background:#fff; color:#333; max-width:700px; margin:50px auto; padding:30px; border-radius:8px; position:relative;">
+        <h2>Privacy Policy</h2>
+        <p>At ApTypingPro, accessible from aptypingpro.onrender.com, we respect your privacy. This Privacy Policy document contains types of information that is collected and recorded by ApTypingPro and how we use it.</p>
+        <h3>Information We Collect</h3>
+        <p>We collect basic information such as your name, email address during registration, and typing test scores to provide leaderboards and performance history.</p>
+        <button onclick="closeModal('privacyModal')" style="background:#ef4444; color:#fff; border:none; padding:10px 20px; border-radius:5px; cursor:pointer; margin-top:20px;">Close</button>
+    </div>
+</div>
+
+<div id="termsModal" class="legal-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:1000; overflow-y:auto; padding:20px;">
+    <div style="background:#fff; color:#333; max-width:700px; margin:50px auto; padding:30px; border-radius:8px; position:relative;">
+        <h2>Terms & Conditions</h2>
+        <p>Welcome to ApTypingPro! These terms and conditions outline the rules and regulations for the use of our website.</p>
+        <p>By accessing this website we assume you accept these terms and conditions. Do not continue to use ApTypingPro if you do not agree to all of the terms stated on this page.</p>
+        <button onclick="closeModal('termsModal')" style="background:#ef4444; color:#fff; border:none; padding:10px 20px; border-radius:5px; cursor:pointer; margin-top:20px;">Close</button>
+    </div>
+</div>
+
+<div id="contactModal" class="legal-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:1000; overflow-y:auto; padding:20px;">
+    <div style="background:#fff; color:#333; max-width:700px; margin:50px auto; padding:30px; border-radius:8px; position:relative;">
+        <h2>Contact Us</h2>
+        <p>If you have any questions or queries about our services, payments, or account issues, you can reach out to us:</p>
+        <p><strong>Email:</strong> ankurparashar1312@gmail.com</p>
+        <p><strong>Platform:</strong> ApTypingPro Online Services</p>
+        <button onclick="closeModal('contactModal')" style="background:#ef4444; color:#fff; border:none; padding:10px 20px; border-radius:5px; cursor:pointer; margin-top:20px;">Close</button>
+    </div>
+</div>
+
+<div id="refundModal" class="legal-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:1000; overflow-y:auto; padding:20px;">
+    <div style="background:#fff; color:#333; max-width:700px; margin:50px auto; padding:30px; border-radius:8px; position:relative;">
+        <h2>Cancellation & Refund Policy</h2>
+        <p>Since ApTypingPro offers digital premium typing features and subscriptions, once a plan is purchased via Razorpay, it is generally non-refundable unless there was a technical duplicate transaction error.</p>
+        <button onclick="closeModal('refundModal')" style="background:#ef4444; color:#fff; border:none; padding:10px 20px; border-radius:5px; cursor:pointer; margin-top:20px;">Close</button>
+    </div>
+</div>
+
+<script>
+    function openModal(modalId) {
+        document.getElementById(modalId).style.display = 'block';
+    }
+    function closeModal(modalId) {
+        document.getElementById(modalId).style.display = 'none';
+    }
+</script>
 </body>
 </html>
