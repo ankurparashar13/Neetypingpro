@@ -215,7 +215,7 @@ function switchTestFolder(folderType) {
 
 function isUserSuperAdminOrPremium() {
     const userEmail = localStorage.getItem('user_email');
-    if (userEmail === DEVELOPER_EMAIL) return true;
+    if (userEmail === "aptypingpro@gmail.com") return true;
     return localStorage.getItem('aptypro_premium') === 'true';
 }
 
