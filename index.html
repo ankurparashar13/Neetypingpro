@@ -210,18 +210,26 @@
                 </div>
             </div>
 
-            <!-- Tab 4: Add Custom Test -->
+            <!-- Tab 4: Add Custom Test (Updated with Test Type Dropdown) -->
             <div id="tab-add-test" class="tab-pane" style="display: none;">
                 <h1 data-i18n="add_test_title">Add Your Own Custom Typing Test</h1>
                 <div class="add-test-box" style="margin-top: 20px; display: flex; flex-direction: column; gap: 15px; max-width: 600px;">
                     <input type="text" id="custom-test-title" placeholder="Test Title (e.g., Delhi HC Judgment Draft 1)" style="padding: 10px; border-radius: 5px; border: 1px solid #ccc;">
                     
+                    <label style="font-weight: bold; font-size: 13px; color: #444;">Select Exam Folder (Category):</label>
                     <select id="custom-test-exam-category" style="padding: 10px; border-radius: 5px; border: 1px solid #ccc;">
                         <option value="delhi-hc">Delhi High Court</option>
                         <option value="supreme-court">Supreme Court</option>
                         <option value="rajasthan-hc">Rajasthan High Court</option>
                         <option value="ldc">LDC Exam</option>
                         <option value="ssc">SSC Exam</option>
+                    </select>
+
+                    <label style="font-weight: bold; font-size: 13px; color: #444;">Select Test Type (Free / Paid / Live):</label>
+                    <select id="custom-test-type" style="padding: 10px; border-radius: 5px; border: 1px solid #ccc;">
+                        <option value="free">🟢 Free Demo Test (Sabke liye free)</option>
+                        <option value="paid">💎 Paid Test (Sirf Buddy Plan walo ke liye)</option>
+                        <option value="live">🔴 Live AIR Contest (Live Contest tab ke liye)</option>
                     </select>
 
                     <textarea id="custom-test-content" placeholder="Paste or type your passage here..." style="padding: 10px; height: 150px; border-radius: 5px; border: 1px solid #ccc;"></textarea>
@@ -247,7 +255,7 @@
                 </div>
             </div>
 
-            <!-- Tab 6: Buddy Special Plan Section (₹100 with Max 2 PCs Limit) -->
+            <!-- Tab 6: Buddy Special Plan Section -->
             <div id="tab-premium" class="tab-pane" style="display: none;">
                 <h1 data-i18n="prem_plans_title">Choose Your Subscription Plan</h1>
                 <p style="margin-top: 5px; color: #666; font-size: 14px;">💡 Get unlimited access to all exam-specific high court drafts and typing passages. <strong style="color: #d35400;">(Strictly limited to 2 PCs per subscription)</strong></p>
@@ -376,41 +384,6 @@
             <button onclick="closeResultModal()" style="width: 100%; padding: 15px; background-color: #6a0dad; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 18px; font-weight: bold; transition: 0.3s;">Close & Return to Dashboard</button>
         </div>
     </div>
-
-    <script>
-        function joinLiveContest() {
-            const contestTest = {
-                title: "Delhi High Court Open Speed Challenge #1",
-                language: "english",
-                category: "delhi-hc",
-                isLive: true,
-                content: "The appellant has approached this Court challenging the order passed by the learned trial judge. It is an admitted fact that the property in dispute was jointly owned by the predecessors of the parties."
-            };
-            if (typeof showPreTestAd === 'function') {
-                showPreTestAd(contestTest);
-            } else if (typeof startTest === 'function') {
-                startTest(contestTest);
-            } else {
-                alert("Test engine loading... Kripya ek baar page refresh kar lein.");
-            }
-        }
-
-        function sendAIChatMessage() {
-            const input = document.getElementById('chat-input-box');
-            const container = document.getElementById('chat-messages');
-            if(!input || !input.value.trim()) return;
-
-            const userText = input.value;
-            container.innerHTML += `<div style="align-self: flex-end; background: #6a0dad; color: white; padding: 10px 15px; border-radius: 8px; max-width: 70%; font-size: 14px;">${userText}</div>`;
-            input.value = '';
-
-            setTimeout(() => {
-                container.innerHTML += `<div style="align-self: flex-start; background: #e2e8f0; padding: 10px 15px; border-radius: 8px; max-width: 70%; font-size: 14px; color: #333;">Aapka sawaal mil gaya hai. Typing speed improve karne ke liye daily regular practice karein!</div>`;
-                container.scrollTop = container.scrollHeight;
-            }, 1000);
-            container.scrollTop = container.scrollHeight;
-        }
-    </script>
 
     <script src="script.js"></script>
     

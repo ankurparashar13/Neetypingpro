@@ -1,5 +1,5 @@
 // ==========================================
-// NEETTYPINGPRO: MASTER SCRIPT.JS (EXACT ADMIN CONTROL)
+// NEETTYPINGPRO: MASTER SCRIPT.JS (CLEAN ADMIN PROFILE & ADD TEST TYPES)
 // ==========================================
 
 const BACKEND_URL = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" 
@@ -8,8 +8,7 @@ const BACKEND_URL = window.location.hostname === "localhost" || window.location.
 
 const typeSound = new Audio('https://www.soundjay.com/button/sounds/button-16.mp3');
 
-// 5 Exam folders ko bilkul khali (empty) rakha hai, ab aap apne hisab se add karoge!
-const defaultTests = [];
+const defaultTests = []; // 5 Exam folders are completely blank for your custom management
 
 let allTypingTests = JSON.parse(localStorage.getItem('custom_tests') || 'null') || defaultTests;
 let currentTest = null;
@@ -271,7 +270,6 @@ async function loadTestCategories() {
         const response = await fetch(`${BACKEND_URL}/api/tests`);
         const dbTests = await response.json();
         dbTests.forEach(test => {
-            // Sirf wahi test dikhega jo is current category folder ka hoga
             if (test.category === currentExamCategory) {
                 combinedTests.push({
                     id: test._id,
@@ -475,9 +473,14 @@ async function submitNewTest() {
     const currentUserEmail = localStorage.getItem('user_email') || DEVELOPER_EMAIL;
     const title = document.getElementById('custom-test-title').value.trim();
     const examCategory = document.getElementById('custom-test-exam-category').value;
+    const testType = document.getElementById('custom-test-type').value; // 'free', 'paid', or 'live'
     const content = document.getElementById('custom-test-content').value.trim();
 
     if (!title || !content) { alert("Title aur Content bharein!"); return; }
+
+    let isPremium = (testType === 'paid');
+    let isLive = (testType === 'live');
+    let isFreeDemo = (testType === 'free');
 
     try {
         const response = await fetch(`${BACKEND_URL}/api/add-test`, {
@@ -488,12 +491,14 @@ async function submitNewTest() {
                 content, 
                 category: examCategory, 
                 createdByEmail: currentUserEmail,
-                isFreeDemo: true // Aapke control ke liye
+                isPremium,
+                isLive,
+                isFreeDemo
             })
         });
         const data = await response.json();
         if (data.success) {
-            alert("Custom test successfully save ho gaya ussi folder mein! 🚀");
+            alert("Custom test successfully save ho gaya! 🚀");
             document.getElementById('custom-test-title').value = '';
             document.getElementById('custom-test-content').value = '';
             loadTestCategories();
@@ -508,10 +513,25 @@ async function submitNewTest() {
 
 function toggleDarkMode() { document.body.classList.toggle('dark-mode'); }
 
+// Clean Profile View for Super Admin
 function loadSettingsProfile() {
-    document.getElementById('profile-email').innerText = localStorage.getItem('user_email') || DEVELOPER_EMAIL;
-    document.getElementById('profile-sub-status').innerText = isUserSuperAdminOrPremium() ? "BUDDY PLAN ACTIVE" : "Free Plan";
-    document.getElementById('profile-device-count').innerText = getActiveDeviceCount() + " / 2 PCs";
+    const userEmail = localStorage.getItem('user_email') || DEVELOPER_EMAIL;
+    const isAdmin = (userEmail === DEVELOPER_EMAIL);
+    const isPrem = isUserSuperAdminOrPremium();
+    
+    document.getElementById('profile-email').innerText = userEmail;
+
+    if (isAdmin) {
+        document.getElementById('profile-sub-status').innerText = "⭐ SUPER ADMIN (Lifetime Access)";
+        document.getElementById('profile-device-count').innerText = "Unlimited / Admin Access";
+        document.getElementById('profile-sub-start').innerText = "Lifetime";
+        document.getElementById('profile-sub-end').innerText = "Never Expires (Lifetime)";
+    } else {
+        document.getElementById('profile-sub-status').innerText = isPrem ? "BUDDY PLAN ACTIVE" : "Free Plan";
+        document.getElementById('profile-device-count').innerText = getActiveDeviceCount() + " / 2 PCs";
+        document.getElementById('profile-sub-start').innerText = localStorage.getItem('sub_start') || "N/A";
+        document.getElementById('profile-sub-end').innerText = localStorage.getItem('sub_end') || "N/A";
+    }
 }
 
 async function logoutUser() {
