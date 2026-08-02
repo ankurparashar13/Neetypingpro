@@ -235,9 +235,9 @@ app.get('/api/user-scores/:email', async (req, res) => {
 
 // 7. Secure Razorpay Live Payment Integration
 const razorpay = new Razorpay({
-    key_id: process.env.RAZORPAY_KEY_ID,    
-    key_secret: process.env.RAZORPAY_KEY_SECRET   
-});
+    key_id: 'rzp_live_TKQs9AFoc6XT89',    
+    key_secret: 'mN6KOt3iF15YWccr0MClL5ww'   
+});;
 
 app.post('/create-order', async (req, res) => {
     try {
