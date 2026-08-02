@@ -1,5 +1,5 @@
 // ==========================================
-// AP-TYPING-PRO: MASTER SCRIPT.JS (BUDDY PLAN - MAX 2 PCS LIMIT)
+// NEETTYPINGPRO: MASTER SCRIPT.JS (BUDDY PLAN - MAX 2 PCS LIMIT)
 // ==========================================
 
 const BACKEND_URL = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" 
@@ -47,7 +47,8 @@ let timerStarted = false;
 let startTime = null;
 let currentExamCategory = 'delhi-hc';
 
-const DEVELOPER_EMAIL = "aptypingpro@gmail.com";
+// Updated to new professional email
+const DEVELOPER_EMAIL = "neetypingpro@gmail.com";
 
 const translations = {
     en: {
@@ -297,16 +298,13 @@ function getDeviceId() {
     return deviceId;
 }
 
-// ==========================================
-// BUDDY PLAN - MAX 2 PCS LIMIT LOGIC
-// ==========================================
 function registerDeviceForBuddyPlan() {
     const deviceId = getDeviceId();
     let registeredDevices = JSON.parse(localStorage.getItem('buddy_plan_devices') || '[]');
     
     if (!registeredDevices.includes(deviceId)) {
         if (registeredDevices.length >= 2) {
-            return false; // Limit exceeded (Max 2 PCs allowed)
+            return false;
         }
         registeredDevices.push(deviceId);
         localStorage.setItem('buddy_plan_devices', JSON.stringify(registeredDevices));
@@ -329,12 +327,12 @@ window.onload = function() {
 
     if (localStorage.getItem('is_logged_in') === 'true') {
         const isPrem = isUserSuperAdminOrPremium();
-        if (isPrem && localStorage.getItem('aptypro_premium') === 'true') {
+        if (isPrem && localStorage.getItem('neetyping_premium') === 'true') {
             const allowed = registerDeviceForBuddyPlan();
             if (!allowed) {
                 alert("🚫 Device Limit Reached!\n\nBuddy Special Plan sirf 2 PCs par hi chal sakta hai. Is device par access block kar diya gaya hai.");
                 localStorage.removeItem('is_logged_in');
-                localStorage.removeItem('aptypro_premium');
+                localStorage.removeItem('neetyping_premium');
                 return;
             }
         }
@@ -348,8 +346,7 @@ window.onload = function() {
             const email = document.getElementById('login-email').value.trim();
             const password = document.getElementById('login-password').value.trim();
             
-            // Check Buddy Plan device restriction on login if premium active
-            const isPrem = (email === DEVELOPER_EMAIL) || (localStorage.getItem('aptypro_premium') === 'true');
+            const isPrem = (email === DEVELOPER_EMAIL) || (localStorage.getItem('neetyping_premium') === 'true');
             if (isPrem && email !== DEVELOPER_EMAIL) {
                 const allowed = registerDeviceForBuddyPlan();
                 if (!allowed) {
@@ -381,7 +378,6 @@ window.onload = function() {
                     alert(data.error || "Login failed!");
                 }
             } catch (err) {
-                // Fallback direct login if offline
                 localStorage.setItem('user_email', email);
                 localStorage.setItem('is_logged_in', 'true');
                 hideLoginShowHome();
@@ -454,7 +450,7 @@ function switchExamCategory(cat) {
 function isUserSuperAdminOrPremium() {
     const userEmail = localStorage.getItem('user_email');
     if (userEmail === DEVELOPER_EMAIL) return true;
-    return localStorage.getItem('aptypro_premium') === 'true';
+    return localStorage.getItem('neetyping_premium') === 'true';
 }
 
 function manageAdsVisibility() {
@@ -711,7 +707,7 @@ function closeResultModal() {
 }
 
 async function submitNewTest() {
-    const currentUserEmail = localStorage.getItem('user_email'] || "";
+    const currentUserEmail = localStorage.getItem('user_email') || "";
     if (!currentUserEmail) { alert("Kripya pehle login karein!"); return; }
 
     const title = document.getElementById('custom-test-title').value.trim();
@@ -815,9 +811,8 @@ function loadLeaderboard() {
 }
 
 async function selectBuddyPlan(amountInRupees, planName) {
-    const userEmail = localStorage.getItem('user_email'] || "user@gmail.com";
+    const userEmail = localStorage.getItem('user_email') || "user@gmail.com";
     
-    // Check device limit before initiating payment
     const allowed = registerDeviceForBuddyPlan();
     if (!allowed) {
         alert("🚫 Error: Is subscription par maximum 2 PCs ki limit already poori ho chuki hai!");
@@ -836,12 +831,12 @@ async function selectBuddyPlan(amountInRupees, planName) {
             key: "rzp_live_TKQs9AFoc6XT89", 
             amount: order.amount,
             currency: "INR",
-            name: "ApTypingPro",
+            name: "NeeTypingPro",
             description: planName,
             order_id: order.id,
             handler: function (response) {
                 alert("Payment Successful! Payment ID: " + response.razorpay_payment_id);
-                localStorage.setItem('aptypro_premium', 'true');
+                localStorage.setItem('neetyping_premium', 'true');
                 let startDate = new Date();
                 let endDate = new Date();
                 endDate.setMonth(endDate.getMonth() + 1);
@@ -857,8 +852,7 @@ async function selectBuddyPlan(amountInRupees, planName) {
         const rzp1 = new Razorpay(options);
         rzp1.open();
     } catch (error) {
-        // Offline test payment bypass fallback
-        localStorage.setItem('aptypro_premium', 'true');
+        localStorage.setItem('neetyping_premium', 'true');
         let startDate = new Date();
         let endDate = new Date();
         endDate.setMonth(endDate.getMonth() + 1);
