@@ -5,7 +5,7 @@
 // --- Dynamic Backend URL Configuration ---
 const BACKEND_URL = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" 
     ? "http://localhost:5000" 
-    : ""; // Live server par relative path ya aapka live backend domain aayega
+    : ""; 
 
 const typeSound = new Audio('https://www.soundjay.com/button/sounds/button-16.mp3');
 const defaultTests = [];
