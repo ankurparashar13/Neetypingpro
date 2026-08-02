@@ -69,6 +69,270 @@ let currentTestFolder = 'free'; // Default folder view ('free' or 'premium')
 const DEVELOPER_EMAIL = "aptypingpro@gmail.com";
 
 // ==========================================
+// MULTI-LANGUAGE UI TRANSLATIONS DICTIONARY
+// ==========================================
+const translations = {
+    en: {
+        nav_home: "🏠 Home",
+        nav_typing: "⌨️ Typing Test",
+        nav_contests: "⚡ Live Contests (AIR)",
+        nav_add: "📄 Add Test",
+        nav_premium: "💎 Premium (Buy Now)",
+        nav_dark: "🌙 Dark Mode",
+        nav_settings: "⚙️ Settings",
+        welcome_text: "Welcome back",
+        welcome_sub: "Ready to boost your typing speed today?",
+        history_title: "📊 My Test History",
+        th_test_name: "Test Name",
+        th_best_wpm: "Best Net WPM",
+        th_best_acc: "Best Acc.",
+        th_attempts: "Attempts",
+        no_history: "No test history found. Start typing!",
+        leaderboard_title: "🏆 Top Typists 🏆",
+        th_rank: "Rank",
+        th_name: "Name",
+        th_wpm: "Net WPM",
+        th_acc: "Accuracy",
+        available_tests: "Available Typing Tests",
+        folder_free: "🟢 Free Tests (With Ad)",
+        folder_prem: "💎 Premium Tests (No Ads)",
+        live_contests_title: "⚡ Live All India Competitions (AIR)",
+        live_contests_sub: "Participate in live tests with all aspirants and check your All India Rank.",
+        status_live: "LIVE NOW",
+        btn_join: "Join Contest 🚀",
+        add_test_title: "Add Your Own Custom Typing Test",
+        select_test_type: "Select Test Type:",
+        btn_save_test: "Test Save Karein",
+        prem_plans_title: "Choose Your Subscription Plan",
+        prem_plans_sub: "💡 Get unlimited access to all High Court Legal Drafts and General typing tests for individuals and typing institutes.",
+        btn_buy_now: "Buy Now",
+        coaching_special: "COACHING SPECIAL",
+        btn_buy_institute: "Buy Institute Plan",
+        settings_title: "Account Settings & Profile",
+        user_info: "User Info",
+        btn_logout: "Logout",
+        btn_reset: "Reset App Data"
+    },
+    hi: {
+        nav_home: "🏠 होम",
+        nav_typing: "⌨️ टाइपिंग टेस्ट",
+        nav_contests: "⚡ लाइव प्रतियोगिताएं (AIR)",
+        nav_add: "📄 टेस्ट जोड़ें",
+        nav_premium: "💎 प्रीमियम (खरीदें)",
+        nav_dark: "🌙 डार्क मोड",
+        nav_settings: "⚙️ सेटिंग्स",
+        welcome_text: "वापस स्वागत है",
+        welcome_sub: "क्या आप आज अपनी टाइपिंग स्पीड बढ़ाने के लिए तैयार हैं?",
+        history_title: "📊 मेरा टेस्ट इतिहास",
+        th_test_name: "टेस्ट का नाम",
+        th_best_wpm: "सर्वश्रेष्ठ नेट WPM",
+        th_best_acc: "सर्वश्रेष्ठ सटीकता",
+        th_attempts: "प्रयास",
+no_history: "कोई टेस्ट इतिहास नहीं मिला। टाइपिंग शुरू करें!",
+        leaderboard_title: "🏆 शीर्ष टाइपिस्ट 🏆",
+        th_rank: "रैंक",
+        th_name: "नाम",
+        th_wpm: "नेट WPM",
+        th_acc: "सटीकता",
+        available_tests: "उपलब्ध टाइपिंग टेस्ट",
+        folder_free: "🟢 फ्री टेस्ट (विज्ञापन के साथ)",
+        folder_prem: "💎 प्रीमियम टेस्ट (बिना विज्ञापन)",
+        live_contests_title: "⚡ ऑल इंडिया लाइव प्रतियोगिताएं (AIR)",
+        live_contests_sub: "सभी अभ्यर्थियों के साथ लाइव टेस्ट में भाग लें और अपनी ऑल इंडिया रैंक जांचें।",
+        status_live: "अभी लाइव है",
+        btn_join: "प्रतियोगिता में शामिल हों 🚀",
+        add_test_title: "अपना खुद का कस्टम टाइपिंग टेस्ट जोड़ें",
+        select_test_type: "टेस्ट का प्रकार चुनें:",
+        btn_save_test: "टेस्ट सेव करें",
+        prem_plans_title: "अपना सब्सक्रिप्शन प्लान चुनें",
+        prem_plans_sub: "💡 व्यक्तिगत और कोचिंग संस्थानों के लिए सभी उच्च न्यायालय के लीगल ड्राफ्ट और जनरल टेस्ट तक असीमित पहुंच प्राप्त करें।",
+        btn_buy_now: "अभी खरीदें",
+        coaching_special: "कोचिंग स्पेशल",
+        btn_buy_institute: "इंस्टीट्यूट प्लान खरीदें",
+        settings_title: "खाता सेटिंग्स और प्रोफाइल",
+        user_info: "यूजर की जानकारी",
+        btn_logout: "लॉग आउट",
+        btn_reset: "डेटा रीसेट करें"
+    },
+    ta: {
+        nav_home: "🏠 முகப்பு",
+        nav_typing: "⌨️ தட்டச்சு சோதனை",
+        nav_contests: "⚡ நேரலை போட்டிகள்",
+        nav_add: "📄 சோதனை சேர்க்க",
+        nav_premium: "💎 பிரீமியம்",
+        nav_dark: "🌙 இருண்ட முறை",
+        nav_settings: "⚙️ அமைப்புகள்",
+        welcome_text: "மீண்டும் வருக",
+        welcome_sub: "இன்று உங்கள் தட்டச்சு வேகத்தை அதிகரிக்க தயாரா?",
+        history_title: "📊 எனது சோதனை வரலாறு",
+        th_test_name: "சோதனை பெயர்",
+        th_best_wpm: "சிறந்த WPM",
+        th_best_acc: "துல்லியம்",
+        th_attempts: "முயற்சிகள்",
+        no_history: "வரலாறு இல்லை.",
+        leaderboard_title: "🏆 சிறந்த தட்டச்சர்கள் 🏆",
+        th_rank: "தரம்",
+        th_name: "பெயர்",
+        th_wpm: "WPM",
+        th_acc: "துல்லியம்",
+        available_tests: "கிடைக்கும் சோதனைகள்",
+        folder_free: "🟢 இலவச சோதனைகள்",
+        folder_prem: "💎 பிரீமியம் சோதனைகள்",
+        live_contests_title: "⚡ நேரலை அகில இந்திய போட்டிகள்",
+        live_contests_sub: "அனைத்து போட்டியாளர்களுடனும் நேரலை சோதனைகளில் பங்கேற்கவும்.",
+        status_live: "நேரலை",
+        btn_join: "இணையுங்கள் 🚀",
+        add_test_title: "உங்கள் சொந்த சோதனையை சேர்க்கவும்",
+        select_test_type: "சோதனை வகையைத் தேர்ந்தெடுக்கவும்:",
+        btn_save_test: "சேமிக்கவும்",
+        prem_plans_title: "திட்டத்தைத் தேர்ந்தெடுக்கவும்",
+        prem_plans_sub: "💡 அனைத்து சோதனைகளுக்கும் வரம்பற்ற அணுகலைப் பெறுங்கள்.",
+        btn_buy_now: "இப்போது வாங்கு",
+        coaching_special: "சிறப்பு",
+        btn_buy_institute: "நிறுவன திட்டம்",
+        settings_title: "அமைப்புகள்",
+        user_info: "பயனர் தகவல்",
+        btn_logout: "வெளியேறு",
+        btn_reset: "மீட்டமை"
+    },
+    te: {
+        nav_home: "🏠 హోమ్",
+        nav_typing: "⌨️ టైపింగ్ టెస్ట్",
+        nav_contests: "⚡ లైవ్ పోటీలు",
+        nav_add: "📄 టెస్ట్ జోడించు",
+        nav_premium: "💎 ప్రీమియం",
+        nav_dark: "🌙 డార్క్ మోడ్",
+        nav_settings: "⚙️ సెట్టింగ్‌లు",
+        welcome_text: "స్వాగతం",
+        welcome_sub: "ఈరోజు మీ టైపింగ్ వేగాన్ని పెంచడానికి సిద్ధంగా ఉన్నారా?",
+        history_title: "📊 నా టెస్ట్ చరిత్ర",
+        th_test_name: "టెస్ట్ పేరు",
+        th_best_wpm: "ఉత్తమ WPM",
+        th_best_acc: "ఖచ్చితత్వం",
+        th_attempts: "ప్రయత్నాలు",
+        no_history: "చరిత్ర లేదు.",
+        leaderboard_title: "🏆 టాప్ టైపిస్ట్స్ 🏆",
+        th_rank: "ర్యాంక్",
+        th_name: "పేరు",
+        th_wpm: "WPM",
+        th_acc: "ఖచ్చితత్వం",
+        available_tests: "అందుబాటులో ఉన్న టెస్ట్‌లు",
+        folder_free: "🟢 ఉచిత టెస్ట్‌లు",
+        folder_prem: "💎 ప్రీమియం టెస్ట్‌లు",
+        live_contests_title: "⚡ లైవ్ ఆల్ ఇండియా పోటీలు",
+        live_contests_sub: "అన్ని ఆశావహులతో లైవ్ టెస్ట్‌లలో పాల్గొనండి.",
+        status_live: "లైవ్",
+        btn_join: "చేరండి 🚀",
+        add_test_title: "మీ స్వంత టెస్ట్‌ని జోడించండి",
+        select_test_type: "టెస్ట్ రకాన్ని ఎంచుకోండి:",
+        btn_save_test: "సేవ్ చేయి",
+        prem_plans_title: "ప్లాన్‌ను ఎంచుకోండి",
+        prem_plans_sub: "💡 అన్ని హైకోర్టు లీగల్ డ్రాఫ్ట్‌లకు అపరిమిత యాక్సెస్ పొందండి.",
+        btn_buy_now: "కొనుగోలు చేయి",
+        coaching_special: "కోచింగ్ స్పెషల్",
+        btn_buy_institute: "ఇన్‌స్టిట్యూట్ ప్లాన్",
+        settings_title: "సెట్టింగ్‌లు",
+        user_info: "వినియోగదారు సమాచారం",
+        btn_logout: "లాగ్ అవుట్",
+        btn_reset: "రీసెట్"
+    },
+    kn: {
+        nav_home: "🏠 ಮುಖಪುಟ",
+        nav_typing: "⌨️ ಟೈಪಿಂಗ್ ಪರೀಕ್ಷೆ",
+        nav_contests: "⚡ ಲೈವ್ ಸ್ಪರ್ಧೆಗಳು",
+        nav_add: "📄 ಪರೀಕ್ಷೆ ಸೇರಿಸಿ",
+        nav_premium: "💎 ಪ್ರೀಮಿಯಂ",
+        nav_dark: "🌙 ಡಾರ್ಕ್ ಮೋಡ್",
+        nav_settings: "⚙️ ಸೆಟ್ಟಿಂಗ್‌ಗಳು",
+        welcome_text: "ಸ್ವಾಗತ",
+        welcome_sub: "ಇಂದೇ ನಿಮ್ಮ ಟೈಪಿಂಗ್ ವೇಗವನ್ನು ಹೆಚ್ಚಿಸಿ.",
+        history_title: "📊 ಇತಿಹಾಸ",
+        th_test_name: "ಹೆಸರು",
+        th_best_wpm: "ಉತ್ತಮ WPM",
+        th_best_acc: "ನಿಖರತೆ",
+        th_attempts: "ಪ್ರಯತ್ನಗಳು",
+        no_history: "ಯಾವುದೇ ಇತಿಹಾಸವಿಲ್ಲ.",
+        leaderboard_title: "🏆 ಶ್ರೇಷ್ಠ ಟೈಪಿಸ್ಟ್‌ಗಳು 🏆",
+        th_rank: "ಶ್ರೇಣಿ",
+        th_name: "ಹೆಸರು",
+        th_wpm: "WPM",
+        th_acc: "ನಿಖರತೆ",
+        available_tests: "ಲಭ್ಯವಿರುವ ಪರೀಕ್ಷೆಗಳು",
+        folder_free: "🟢 ಉಚಿತ ಪರೀಕ್ಷೆಗಳು",
+        folder_prem: "💎 ಪ್ರೀಮಿಯಂ ಪರೀಕ್ಷೆಗಳು",
+        live_contests_title: "⚡ ಲೈವ್ ಅಖಿಲ ಭಾರತ ಸ್ಪರ್ಧೆಗಳು",
+        live_contests_sub: "ಲೈವ್ ಪರೀಕ್ಷೆಗಳಲ್ಲಿ ಭಾಗವಹಿಸಿ.",
+        status_live: "ಲೈವ್",
+        btn_join: "ಸೇರಿಕೊಳ್ಳಿ 🚀",
+        add_test_title: "ನಿಮ್ಮ ಸ್ವಂತ ಪರೀಕ್ಷೆಯನ್ನು ಸೇರಿಸಿ",
+        select_test_type: "ಪ್ರಕಾರವನ್ನು ಆಯ್ಕೆಮಾಡಿ:",
+        btn_save_test: "ಉಳಿಸಿ",
+        prem_plans_title: "ಯೋಜನೆ",
+        prem_plans_sub: "💡 ಅನಿಯಮಿತ ಪ್ರವೇಶ.",
+        btn_buy_now: "ಖರೀದಿಸಿ",
+        coaching_special: "ವಿಶೇಷ",
+        btn_buy_institute: "ಸಂಸ್ಥೆ ಯೋಜನೆ",
+        settings_title: "ಸೆಟ್ಟಿಂಗ್‌ಗಳು",
+        user_info: "ಮಾಹಿತಿ",
+        btn_logout: "ಹೊರನಡೆ",
+        btn_reset: "ಮರುಹೊಂದಿಸಿ"
+    },
+    ml: {
+        nav_home: "🏠 ഹോം",
+        nav_typing: "⌨️ ടൈപ്പിംഗ് ടെസ്റ്റ്",
+        nav_contests: "⚡ ലൈവ് മത്സരങ്ങൾ",
+        nav_add: "📄 ടെസ്റ്റ് ചേർക്കുക",
+        nav_premium: "💎 പ്രീമിയം",
+        nav_dark: "🌙 ഡാർക്ക് മോഡ്",
+        nav_settings: "⚙️ ക്രമീകരണങ്ങൾ",
+        welcome_text: "സ്വാഗതം",
+        welcome_sub: "ഇന്ന് നിങ്ങളുടെ വേഗത വർദ്ധിപ്പിക്കുക.",
+        history_title: "📊 ചരിത്രം",
+        th_test_name: "പേര്",
+        th_best_wpm: "മികച്ച WPM",
+        th_best_acc: "കൃത്യത",
+        th_attempts: "ശ്രമങ്ങൾ",
+        no_history: "ചരിത്രമില്ല.",
+        leaderboard_title: "🏆 മികച്ച ടൈപ്പിസ്റ്റുകൾ 🏆",
+        th_rank: "റാങ്ക്",
+        th_name: "പേര്",
+        th_wpm: "WPM",
+        th_acc: "കൃത്യത",
+        available_tests: "ലഭ്യമായ ടെസ്റ്റുകൾ",
+        folder_free: "🟢 സൗജന്യ ടെസ്റ്റുകൾ",
+        folder_prem: "💎 പ്രീമിയം ടെസ്റ്റുകൾ",
+        live_contests_title: "⚡ ലൈവ് മത്സരങ്ങൾ",
+        live_contests_sub: "തത്സമയ ടെസ്റ്റുകളിൽ പങ്കെടുക്കുക.",
+        status_live: "ലൈവ്",
+        btn_join: "ചേരുക 🚀",
+        add_test_title: "സ്വന്തം ടെസ്റ്റ് ചേർക്കുക",
+        select_test_type: "തരം തിരഞ്ഞെടുക്കുക:",
+        btn_save_test: "സേവ് ചെയ്യുക",
+        prem_plans_title: "പ്ലാൻ തിരഞ്ഞെടുക്കുക",
+        prem_plans_sub: "💡 പരിധിയില്ലാത്ത ആക്സസ് നേടുക.",
+        btn_buy_now: "വാങ്ങുക",
+        coaching_special: "പ്രത്യേകം",
+        btn_buy_institute: "ഇൻസ്റ്റിറ്റ്യൂട്ട് പ്ലാൻ",
+        settings_title: "ക്രമീകരണങ്ങൾ",
+        user_info: "വിവരങ്ങൾ",
+        btn_logout: "പുറത്തുകടക്കുക",
+        btn_reset: "റീസെറ്റ്"
+    }
+};
+
+function changeUILanguage(langCode) {
+    localStorage.setItem('app_ui_lang', langCode);
+    const dict = translations[langCode] || translations['en'];
+    
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (dict[key]) {
+            el.innerText = dict[key];
+        }
+    });
+}
+
+// ==========================================
 // UNIQUE DEVICE FINGERPRINTING FOR LOGIN LIMIT
 // ==========================================
 function getDeviceId() {
@@ -84,6 +348,13 @@ function getDeviceId() {
 // INITIALIZATION & AUTHENTICATION
 // ==========================================
 window.onload = function() {
+    const savedLang = localStorage.getItem('app_ui_lang') || 'en';
+    const langDropdown = document.getElementById('app-ui-lang');
+    if (langDropdown) {
+        langDropdown.value = savedLang;
+        changeUILanguage(savedLang);
+    }
+
     if (localStorage.getItem('is_logged_in') === 'true') {
         hideLoginShowHome();
     }
@@ -607,7 +878,7 @@ async function submitNewTest() {
     const isPremOrAdmin = isUserSuperAdminOrPremium();
 
     if (!isPremOrAdmin) {
-        // Free user ke liye popup jo seedha Premium page par bhej dega
+        // Free user ke liye popup jo seedha Premium page par bhej deगा
         alert("🔒 Feature Locked!\n\nApna custom test save karne aur add karne ke liye kripya hamara Premium Plan kharidein.");
         switchTab('premium'); 
         return;
