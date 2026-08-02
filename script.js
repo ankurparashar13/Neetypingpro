@@ -16,6 +16,7 @@ const hindiLegalPara = "अपीलकर्ता ने विद्वान
 const examCategories = ['delhi-hc', 'supreme-court', 'rajasthan-hc', 'ldc', 'ssc'];
 
 examCategories.forEach((cat, index) => {
+    // 2 Free demo tests per category, rest are premium/paid
     for (let i = 1; i <= 10; i++) {
         defaultTests.push({
             id: index * 20 + i,
@@ -23,7 +24,7 @@ examCategories.forEach((cat, index) => {
             category: cat,
             title: `${cat.toUpperCase()} English Practice Test - ${i}`,
             content: englishLegalPara.repeat(5).trim(),
-            isPremium: (i > 3)
+            isPremium: (i > 2)
         });
     }
     for (let i = 1; i <= 10; i++) {
@@ -33,7 +34,7 @@ examCategories.forEach((cat, index) => {
             category: cat,
             title: `${cat.toUpperCase()} Hindi Practice Test - ${i}`,
             content: hindiLegalPara.repeat(5).trim(),
-            isPremium: (i > 3)
+            isPremium: (i > 2)
         });
     }
 });
@@ -47,7 +48,7 @@ let timerStarted = false;
 let startTime = null;
 let currentExamCategory = 'delhi-hc';
 
-// Updated to new professional email
+// Updated professional admin email
 const DEVELOPER_EMAIL = "neetypingpro@gmail.com";
 
 const translations = {
@@ -56,6 +57,7 @@ const translations = {
         nav_typing: "⌨️ Typing Test",
         nav_contests: "⚡ Live Contests (AIR)",
         nav_add: "📄 Add Test",
+        nav_aichat: "🤖 AI Chatbot",
         nav_premium: "💎 Buddy Special (₹100)",
         nav_dark: "🌙 Dark Mode",
         nav_settings: "⚙️ Settings",
@@ -93,6 +95,7 @@ const translations = {
         nav_typing: "⌨️ टाइपिंग टेस्ट",
         nav_contests: "⚡ लाइव प्रतियोगिताएं (AIR)",
         nav_add: "📄 टेस्ट जोड़ें",
+        nav_aichat: "🤖 एआई चैटबॉट",
         nav_premium: "💎 बडी स्पेशल (₹100)",
         nav_dark: "🌙 डार्क मोड",
         nav_settings: "⚙️ सेटिंग्स",
@@ -130,6 +133,7 @@ const translations = {
         nav_typing: "⌨️ தட்டச்சு சோதனை",
         nav_contests: "⚡ நேரலை போட்டிகள்",
         nav_add: "📄 சோதனை சேர்க்க",
+        nav_aichat: "🤖 AI அரட்டை",
         nav_premium: "💎 பிரீமியம்",
         nav_dark: "🌙 இருண்ட முறை",
         nav_settings: "⚙️ அமைப்புகள்",
@@ -167,6 +171,7 @@ const translations = {
         nav_typing: "⌨️ టైపింగ్ టెస్ట్",
         nav_contests: "⚡ లైవ్ పోటీలు",
         nav_add: "📄 టెస్ట్ జోడించు",
+        nav_aichat: "🤖 AI చాట్‌బాట్",
         nav_premium: "💎 ప్రీమియం",
         nav_dark: "🌙 డార్క్ మోడ్",
         nav_settings: "⚙️ సెట్టింగ్‌లు",
@@ -204,6 +209,7 @@ const translations = {
         nav_typing: "⌨️ ಟೈಪಿಂಗ್ ಪರೀಕ್ಷೆ",
         nav_contests: "⚡ ಲೈವ್ ಸ್ಪರ್ಧೆಗಳು",
         nav_add: "📄 ಪರೀಕ್ಷೆ ಸೇರಿಸಿ",
+        nav_aichat: "🤖 AI ಚಾಟ್",
         nav_premium: "💎 ಪ್ರೀಮಿಯಂ",
         nav_dark: "🌙 ಡಾರ್ಕ್ ಮೋಡ್",
         nav_settings: "⚙️ ಸೆಟ್ಟಿಂಗ್‌ಗಳು",
@@ -241,6 +247,7 @@ const translations = {
         nav_typing: "⌨️ ടൈപ്പിംഗ് ടെസ്റ്റ്",
         nav_contests: "⚡ ലൈവ് മത്സരങ്ങൾ",
         nav_add: "📄 ടെസ്റ്റ് ചേർക്കുക",
+        nav_aichat: "🤖 AI ചാറ്റ്ബോട്ട്",
         nav_premium: "💎 പ്രീമിയം",
         nav_dark: "🌙 ഡാർക്ക് മോഡ്",
         nav_settings: "⚙️ ക്രമീകരണങ്ങൾ",
@@ -326,8 +333,9 @@ window.onload = function() {
     changeUILanguage(savedLang);
 
     if (localStorage.getItem('is_logged_in') === 'true') {
-        const isPrem = isUserSuperAdminOrPremium();
-        if (isPrem && localStorage.getItem('neetyping_premium') === 'true') {
+        const email = localStorage.getItem('user_email');
+        const isPrem = (email === DEVELOPER_EMAIL) || isUserSuperAdminOrPremium();
+        if (isPrem && email !== DEVELOPER_EMAIL && localStorage.getItem('neetyping_premium') === 'true') {
             const allowed = registerDeviceForBuddyPlan();
             if (!allowed) {
                 alert("🚫 Device Limit Reached!\n\nBuddy Special Plan sirf 2 PCs par hi chal sakta hai. Is device par access block kar diya gaya hai.");
@@ -367,6 +375,10 @@ window.onload = function() {
                     localStorage.setItem('user_email', email);
                     localStorage.setItem('is_logged_in', 'true');
                     
+                    if (email === DEVELOPER_EMAIL) {
+                        localStorage.setItem('neetyping_premium', 'true');
+                    }
+                    
                     if (!localStorage.getItem('sub_start')) {
                         localStorage.setItem('sub_start', new Date().toLocaleDateString());
                         let futureDate = new Date();
@@ -378,8 +390,10 @@ window.onload = function() {
                     alert(data.error || "Login failed!");
                 }
             } catch (err) {
+                // Fallback login if backend offline
                 localStorage.setItem('user_email', email);
                 localStorage.setItem('is_logged_in', 'true');
+                if (email === DEVELOPER_EMAIL) localStorage.setItem('neetyping_premium', 'true');
                 hideLoginShowHome();
             }
         };
@@ -412,7 +426,7 @@ function switchTab(tabName) {
     if (typingPage) typingPage.style.display = 'none';
     if (appSection) appSection.style.display = 'flex';
 
-    const tabs = ['tab-home', 'tab-typing-tests', 'tab-contests', 'tab-add-test', 'tab-premium', 'tab-settings'];
+    const tabs = ['tab-home', 'tab-typing-tests', 'tab-contests', 'tab-add-test', 'tab-ai-chat', 'tab-premium', 'tab-settings'];
     tabs.forEach(t => {
         const el = document.getElementById(t);
         if (el) el.style.display = 'none';
@@ -427,6 +441,8 @@ function switchTab(tabName) {
         document.getElementById('tab-contests').style.display = 'block';
     } else if (tabName === 'add-test') {
         document.getElementById('tab-add-test').style.display = 'block';
+    } else if (tabName === 'ai-chat' || tabName === 'tab-ai-chat') {
+        document.getElementById('tab-ai-chat').style.display = 'block';
     } else if (tabName === 'premium') {
         document.getElementById('tab-premium').style.display = 'block';
     } else if (tabName === 'settings') {
@@ -509,7 +525,7 @@ async function loadTestCategories() {
                 <h4 style="margin: 0 0 5px 0; color: #333;">${test.title}</h4>
                 <p style="margin: 0; font-size: 13px; color: #666;">Exam: ${test.category.toUpperCase()} | Words: ~${test.content.split(/\s+/).length}</p>
             </div>
-            <span>${isLocked ? '🔒 [BUDDY PLAN LOCKED]' : (test.isLive ? '🔴 [LIVE AIR CONTEST]' : '🟢 [PRACTICE TEST - WITH AD]')}</span>
+            <span>${isLocked ? '🔒 [BUDDY PLAN LOCKED]' : (test.isLive ? '🔴 [LIVE AIR CONTEST]' : '🟢 [PRACTICE TEST - FREE/DEMO]')}</span>
         `;
         
         card.onclick = () => {
@@ -707,7 +723,7 @@ function closeResultModal() {
 }
 
 async function submitNewTest() {
-    const currentUserEmail = localStorage.getItem('user_email') || "";
+    const currentUserEmail = localStorage.getItem('user_email') || DEVELOPER_EMAIL;
     if (!currentUserEmail) { alert("Kripya pehle login karein!"); return; }
 
     const title = document.getElementById('custom-test-title').value.trim();

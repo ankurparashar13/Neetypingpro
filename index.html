@@ -110,6 +110,7 @@
                     <li onclick="switchTab('typing-tests')" style="cursor: pointer;" data-i18n="nav_typing">⌨️ Typing Test</li>
                     <li onclick="switchTab('contests')" style="cursor: pointer; color: #00cec9;" data-i18n="nav_contests">⚡ Live Contests (AIR)</li>
                     <li onclick="switchTab('add-test')" style="cursor: pointer;" data-i18n="nav_add">📄 Add Test</li>
+                    <li onclick="switchTab('ai-chat')" style="cursor: pointer; color: #ffeb3b;" data-i18n="nav_aichat">🤖 AI Chatbot</li>
                     <li onclick="switchTab('premium')" style="cursor: pointer; color: #ffeb3b;" data-i18n="nav_premium">💎 Buddy Special (₹100)</li>
                     <li onclick="toggleDarkMode()" style="cursor: pointer;" data-i18n="nav_dark">🌙 Dark Mode</li>
                     <li onclick="switchTab('settings')" style="cursor: pointer;" data-i18n="nav_settings">⚙️ Settings</li>
@@ -229,7 +230,24 @@
                 </div>
             </div>
 
-            <!-- Tab 5: Buddy Special Plan Section (₹100 with Max 2 PCs Limit) -->
+            <!-- Tab 5: AI Chatbot UI Section -->
+            <div id="tab-ai-chat" class="tab-pane" style="display: none;">
+                <h1 style="color: #6a0dad; margin-bottom: 10px;">🤖 AI Assistant & Chatbot</h1>
+                <p style="color: #666; margin-bottom: 20px;">Aap yahan typing tips, legal terminology, ya kisi bhi sawaal ke liye AI se baat kar sakte hain.</p>
+                <div style="background: #fff; border: 1px solid #ddd; border-radius: 8px; height: 450px; display: flex; flex-direction: column; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+                    <div id="chat-messages" style="flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; background: #f9f9f9;">
+                        <div style="align-self: flex-start; background: #e2e8f0; padding: 10px 15px; border-radius: 8px; max-width: 70%; font-size: 14px; color: #333;">
+                            Hello! Main aapka AI assistant hoon. Main aapki typing speed improve karne mein kaise madad kar sakta hoon?
+                        </div>
+                    </div>
+                    <div style="padding: 15px; border-top: 1px solid #ddd; display: flex; gap: 10px; background: #fff;">
+                        <input type="text" id="chat-input-box" placeholder="Kuchh poochhein..." style="flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 6px; outline: none;">
+                        <button onclick="sendAIChatMessage()" style="padding: 10px 20px; background: #6a0dad; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">Send</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 6: Buddy Special Plan Section (₹100 with Max 2 PCs Limit) -->
             <div id="tab-premium" class="tab-pane" style="display: none;">
                 <h1 data-i18n="prem_plans_title">Choose Your Subscription Plan</h1>
                 <p style="margin-top: 5px; color: #666; font-size: 14px;">💡 Get unlimited access to all exam-specific high court drafts and typing passages. <strong style="color: #d35400;">(Strictly limited to 2 PCs per subscription)</strong></p>
@@ -246,7 +264,7 @@
                 </div>
             </div>
 
-            <!-- Tab 6: Settings & Profile Panel -->
+            <!-- Tab 7: Settings & Profile Panel -->
             <div id="tab-settings" class="tab-pane" style="display: none;">
                 <h1 data-i18n="settings_title">Account Settings & Profile</h1>
                 <div class="settings-box" style="margin-top: 20px; background: #fff; padding: 25px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); max-width: 900px; display: flex; flex-direction: column; gap: 20px;">
@@ -375,6 +393,22 @@
             } else {
                 alert("Test engine loading... Kripya ek baar page refresh kar lein.");
             }
+        }
+
+        function sendAIChatMessage() {
+            const input = document.getElementById('chat-input-box');
+            const container = document.getElementById('chat-messages');
+            if(!input || !input.value.trim()) return;
+
+            const userText = input.value;
+            container.innerHTML += `<div style="align-self: flex-end; background: #6a0dad; color: white; padding: 10px 15px; border-radius: 8px; max-width: 70%; font-size: 14px;">${userText}</div>`;
+            input.value = '';
+
+            setTimeout(() => {
+                container.innerHTML += `<div style="align-self: flex-start; background: #e2e8f0; padding: 10px 15px; border-radius: 8px; max-width: 70%; font-size: 14px; color: #333;">Aapka sawaal mil gaya hai. Typing speed improve karne ke liye daily regular practice karein!</div>`;
+                container.scrollTop = container.scrollHeight;
+            }, 1000);
+            container.scrollTop = container.scrollHeight;
         }
     </script>
 
