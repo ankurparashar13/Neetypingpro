@@ -34,7 +34,7 @@ const testSchema = new mongoose.Schema({
     title: { type: String, required: true },
     content: { type: String, required: true }, 
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: false }, 
-    createdByEmail: { type: String, default: "aptypingpro@gmail.com" },
+    createdByEmail: { type: String, default: "neetypingpro@gmail.com" },
     isAdminTest: { type: Boolean, default: false },
     isPublic: { type: Boolean, default: true }, 
     isPremium: { type: Boolean, default: false },
@@ -71,7 +71,7 @@ const competitionSchema = new mongoose.Schema({
 const Competition = mongoose.model('Competition', competitionSchema);
 
 // --- Secure MongoDB Connection (Using Environment Variables) ---
-const mongoURI = process.env.MONGO_URI || 'mongodb://ankurparashar1312_db_user:ZCMgnxEfEHyZM39Q@ac-t2amnzl-shard-00-00.gbzcmt5.mongodb.net:27017,ac-t2amnzl-shard-00-01.gbzcmt5.mongodb.net:27017,ac-t2amnzl-shard-00-02.gbzcmt5.mongodb.net:27017/anktyping?ssl=true&replicaSet=atlas-97r46d-shard-0&authSource=admin&appName=Cluster0';
+const mongoURI = 'mongodb://ankurparashar1312_db_user:ankur2@ac-t2amnzl-shard-00-00.gbzcmt5.mongodb.net:27017,ac-t2amnzl-shard-00-01.gbzcmt5.mongodb.net:27017,ac-t2amnzl-shard-00-02.gbzcmt5.mongodb.net:27017/anktyping?ssl=true&replicaSet=atlas-97r46d-shard-0&authSource=admin&appName=Cluster0';
 
 mongoose.connect(mongoURI)
     .then(() => console.log("Cloud MongoDB Database se successfully connect ho gaye! 🚀"))
@@ -149,7 +149,7 @@ app.post('/api/save-score', async (req, res) => {
 app.post('/api/add-test', async (req, res) => {
     try {
         const { title, content, isPremium, isLive, createdByEmail } = req.body;
-        const DEVELOPER_EMAIL = "aptypingpro@gmail.com";
+        const DEVELOPER_EMAIL = "neetypingpro@gmail.com";
         const isAdmin = (createdByEmail === DEVELOPER_EMAIL);
 
         const user = await User.findOne({ email: createdByEmail });
@@ -233,10 +233,10 @@ app.get('/api/user-scores/:email', async (req, res) => {
     }
 });
 
-// 7. Secure Razorpay Live Payment Integration (Updated with your Live Keys)
+// 7. Secure Razorpay Live Payment Integration
 const razorpay = new Razorpay({
-    key_id: process.env.RAZORPAY_KEY_ID || 'rzp_live_TKQs9AFoc6XT89',    
-    key_secret: process.env.RAZORPAY_KEY_SECRET || 'mN6KOt3iF15YWccr0MClL5ww'   
+    key_id: process.env.RAZORPAY_KEY_ID,    
+    key_secret: process.env.RAZORPAY_KEY_SECRET   
 });
 
 app.post('/create-order', async (req, res) => {
@@ -260,8 +260,8 @@ let otpStorage = {}; // Temporary memory for OTP verification
 const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
-        user: process.env.EMAIL_USER || 'aptypingpro@gmail.com',
-        pass: process.env.EMAIL_PASS || 'YOUR_EMAIL_APP_PASSWORD'
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
     }
 });
 
@@ -273,9 +273,9 @@ app.post('/send-otp', async (req, res) => {
     otpStorage[email] = generatedOTP;
 
     const mailOptions = {
-        from: process.env.EMAIL_USER || 'aptypingpro@gmail.com',
+        from: process.env.EMAIL_USER,
         to: email,
-        subject: 'ApTypingPro - Password Reset OTP',
+        subject: 'Neetypingpro - Password Reset OTP',
         text: `Aapka password reset OTP hai: ${generatedOTP}. Yeh 10 minute tak valid hai.`
     };
 
@@ -284,7 +284,7 @@ app.post('/send-otp', async (req, res) => {
         console.log(`Real OTP ${generatedOTP} sent successfully to ${email}`);
         res.json({ message: "OTP sent successfully to email!", success: true });
     } catch (error) {
-        console.error("Email sending error:", error);
+        console.log("Email sending error:", error);
         res.json({ message: "OTP sent (Fallback Mode 123456)", success: true });
         otpStorage[email] = "123456";
     }
