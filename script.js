@@ -1,5 +1,5 @@
 // ==========================================
-// NEETTYPINGPRO: MASTER SCRIPT.JS (CLEAN ADMIN PROFILE & ADD TEST TYPES)
+// NEETTYPINGPRO: MASTER SCRIPT.JS (FINAL OPTIMIZED)
 // ==========================================
 
 const BACKEND_URL = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" 
@@ -7,10 +7,8 @@ const BACKEND_URL = window.location.hostname === "localhost" || window.location.
     : ""; 
 
 const typeSound = new Audio('https://www.soundjay.com/button/sounds/button-16.mp3');
+const defaultTests = [];
 
-const defaultTests = []; // 5 Exam folders are completely blank for your custom management
-
-let allTypingTests = JSON.parse(localStorage.getItem('custom_tests') || 'null') || defaultTests;
 let currentTest = null;
 let timer = null;
 let testDurationMinutes = 10;
@@ -180,7 +178,6 @@ window.onload = function() {
         };
     }
 
-    // AI Chat Enter Key Event Fix
     const chatInput = document.getElementById('chat-input-box');
     if (chatInput) {
         chatInput.onkeydown = function(e) {
@@ -258,12 +255,15 @@ function manageAdsVisibility() {
     });
 }
 
+// Load Tests with Admin Delete Option
 async function loadTestCategories() {
     const container = document.getElementById('test-list-container');
     if (!container) return;
     container.innerHTML = '<p style="padding: 10px; color: #666;">Tests load ho rahe hain...</p>';
 
     const hasAccess = isUserSuperAdminOrPremium();
+    const currentUserEmail = localStorage.getItem('user_email') || "";
+    const isAdmin = (currentUserEmail === DEVELOPER_EMAIL);
     let combinedTests = [];
 
     try {
@@ -297,26 +297,43 @@ async function loadTestCategories() {
     combinedTests.forEach((test) => {
         const isLocked = test.isPremium && !hasAccess && !test.isFreeDemo;
         const card = document.createElement('div');
-        card.style.cssText = "padding: 15px; margin: 10px 0; background: #fff; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; cursor: pointer;";
+        card.style.cssText = "padding: 15px; margin: 10px 0; background: #fff; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center;";
         
+        let deleteBtnHtml = isAdmin ? `<button onclick="deleteTestFromDb('${test.id}', event)" style="background: #e74c3c; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; margin-left: 10px; font-size: 12px;">Delete</button>` : '';
+
         card.innerHTML = `
-            <div>
+            <div style="cursor: pointer; flex: 1;" onclick="handleTestClick(${JSON.stringify(test).replace(/"/g, '&quot;')})">
                 <h4 style="margin: 0 0 5px 0; color: #333;">${test.title}</h4>
                 <p style="margin: 0; font-size: 13px; color: #666;">Exam: ${test.category.toUpperCase()} | Words: ~${test.content.split(/\s+/).length}</p>
             </div>
-            <span>${isLocked ? '🔒 [BUDDY PLAN LOCKED]' : (test.isLive ? '🔴 [LIVE AIR CONTEST]' : (test.isFreeDemo ? '🟢 [FREE DEMO]' : '💎 [PAID TEST]'))}</span>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <span style="cursor: pointer;" onclick="handleTestClick(${JSON.stringify(test).replace(/"/g, '&quot;')})">${isLocked ? '🔒 [LOCKED]' : (test.isLive ? '🔴 [LIVE]' : (test.isFreeDemo ? '🟢 [FREE]' : '💎 [PAID]'))}</span>
+                ${deleteBtnHtml}
+            </div>
         `;
-        
-        card.onclick = () => {
-            if (isLocked) {
-                alert("Yeh test Buddy Special Plan ke liye hai! Kripya ₹100 ka plan kharidein.");
-                switchTab('premium');
-            } else {
-                handleTestClick(test);
-            }
-        };
         container.appendChild(card);
     });
+}
+
+// Admin Delete Test Function
+async function deleteTestFromDb(testId, event) {
+    event.stopPropagation();
+    if (!confirm("Kya aap sach mein is test ko delete karna chahte hain?")) return;
+
+    try {
+        const response = await fetch(`${BACKEND_URL}/api/delete-test/${testId}`, {
+            method: 'DELETE'
+        });
+        const data = await response.json();
+        if (data.success) {
+            alert("Test successfully delete ho gaya!");
+            loadTestCategories();
+        } else {
+            alert("Delete karne mein error aayi.");
+        }
+    } catch (err) {
+        alert("Server error during deletion.");
+    }
 }
 
 function handleTestClick(test) {
@@ -414,7 +431,7 @@ if (typingInput) {
     };
 }
 
-function submitTest() {
+async function submitTest() {
     try { 
         if (timer) clearInterval(timer);
         const inputArea = document.getElementById('typing-input');
@@ -458,6 +475,16 @@ function submitTest() {
         document.getElementById('res-original').innerHTML = origHTML;
         document.getElementById('res-typed').innerHTML = typedHTML;
 
+        // Save Score to Database so Leaderboard updates properly
+        const userEmail = localStorage.getItem('user_email') || "User";
+        const userName = userEmail.split('@')[0];
+        await fetch(`${BACKEND_URL}/api/save-score`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userName, userEmail, wpm: netWPM, accuracy })
+        });
+
+        loadLeaderboard();
         document.getElementById('result-modal').style.display = 'flex';
     } catch (error) {
         alert("Test submit error.");
@@ -473,7 +500,7 @@ async function submitNewTest() {
     const currentUserEmail = localStorage.getItem('user_email') || DEVELOPER_EMAIL;
     const title = document.getElementById('custom-test-title').value.trim();
     const examCategory = document.getElementById('custom-test-exam-category').value;
-    const testType = document.getElementById('custom-test-type').value; // 'free', 'paid', or 'live'
+    const testType = document.getElementById('custom-test-type').value; 
     const content = document.getElementById('custom-test-content').value.trim();
 
     if (!title || !content) { alert("Title aur Content bharein!"); return; }
@@ -513,7 +540,6 @@ async function submitNewTest() {
 
 function toggleDarkMode() { document.body.classList.toggle('dark-mode'); }
 
-// Clean Profile View for Super Admin
 function loadSettingsProfile() {
     const userEmail = localStorage.getItem('user_email') || DEVELOPER_EMAIL;
     const isAdmin = (userEmail === DEVELOPER_EMAIL);
@@ -542,6 +568,7 @@ async function logoutUser() {
     }
 }
 
+// Clean Leaderboard: Only show actual completed test scores (No dummy entries)
 function loadLeaderboard() {
     fetch(`${BACKEND_URL}/api/leaderboard`)
         .then(res => res.json())
@@ -549,6 +576,12 @@ function loadLeaderboard() {
             const table = document.getElementById('leaderboard-body'); 
             if (!table) return;
             table.innerHTML = '';
+            
+            if (!data || data.length === 0) {
+                table.innerHTML = `<tr><td colspan="4" style="padding: 15px; color: #888; text-align: center;">No scores yet. Complete a test to top the leaderboard!</td></tr>`;
+                return;
+            }
+
             data.forEach((score, index) => {
                 table.innerHTML += `<tr style="background-color: #fff; border-bottom: 1px solid #ddd;">
                     <td style="padding: 12px; font-weight: bold;">${index + 1}</td>
