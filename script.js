@@ -223,6 +223,18 @@ function manageAdsVisibility() {
     });
 }
 
+// Live Contest Join Handler
+function joinLiveContest() {
+    const liveTest = {
+        id: "live_contest_1",
+        title: "Delhi High Court Open Speed Challenge #1",
+        content: "The high court held that speedy trial is a fundamental right of every citizen and delay in judicial proceedings defeats justice.",
+        category: "delhi-hc",
+        isLive: true
+    };
+    startTest(liveTest);
+}
+
 // Load Tests with Proper Free/Paid & Delete Support
 async function loadTestCategories() {
     const container = document.getElementById('test-list-container');
@@ -270,7 +282,8 @@ async function loadTestCategories() {
         const card = document.createElement('div');
         card.style.cssText = "padding: 15px; margin: 10px 0; background: #fff; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center;";
         
-        let deleteBtnHtml = (isAdmin || test.createdByEmail === currentUserEmail) 
+        // Strict Control: Delete button appears ONLY for developer email
+        let deleteBtnHtml = (isAdmin) 
             ? `<button onclick="deleteTestFromDb('${test.id}', event)" style="background: #e74c3c; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; margin-left: 10px; font-weight: bold; font-size: 12px;">Delete</button>` 
             : '';
 
