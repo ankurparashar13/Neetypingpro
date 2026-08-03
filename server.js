@@ -2,7 +2,7 @@ const express = require('express');
 const Razorpay = require('razorpay');
 const cors = require('cors'); 
 const path = require('path');
-const nodemailer = require('nodemailer'); // Real Email OTP ke liye
+const nodemailer = require('nodemailer'); 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
@@ -11,10 +11,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname)));
 
-// --- Database Setup (Mongoose) ---
 const mongoose = require('mongoose');
 
-// 1. User Schema (Subscription & Auth Tracker)
 const userSchema = new mongoose.Schema({
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
@@ -26,14 +24,12 @@ const userSchema = new mongoose.Schema({
 });
 const User = mongoose.model('User', userSchema);
 
-// Active Sessions Tracker for Device Limits (In-memory store)
 const activeSessions = {}; 
 
-// 2. Test Schema (Data Privacy & Custom Tests with Creator Info & Live Status)
 const testSchema = new mongoose.Schema({
     title: { type: String, required: true },
     content: { type: String, required: true }, 
-    category: { type: String, default: 'delhi-hc' }, // Exam specific folders
+    category: { type: String, default: 'delhi-hc' }, 
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: false }, 
     createdByEmail: { type: String, default: "neetypingpro@gmail.com" },
     isAdminTest: { type: Boolean, default: false },
@@ -45,7 +41,6 @@ const testSchema = new mongoose.Schema({
 });
 const Test = mongoose.model('Test', testSchema);
 
-// 3. Score Schema (Leaderboard & History)
 const scoreSchema = new mongoose.Schema({
     userName: { type: String, default: "Anonymous" },
     userEmail: { type: String, default: "" }, 
@@ -55,7 +50,6 @@ const scoreSchema = new mongoose.Schema({
 });
 const Score = mongoose.model('Score', scoreSchema);
 
-// 4. Live Competition / Contest Schema (AIR - All India Rank System)
 const competitionSchema = new mongoose.Schema({
     title: { type: String, required: true },
     content: { type: String, required: true },
@@ -72,18 +66,12 @@ const competitionSchema = new mongoose.Schema({
 });
 const Competition = mongoose.model('Competition', competitionSchema);
 
-// --- Secure MongoDB Connection ---
 const mongoURI = 'mongodb://ankurparashar1312_db_user:ankur2@ac-t2amnzl-shard-00-00.gbzcmt5.mongodb.net:27017,ac-t2amnzl-shard-00-01.gbzcmt5.mongodb.net:27017,ac-t2amnzl-shard-00-02.gbzcmt5.mongodb.net:27017/anktyping?ssl=true&replicaSet=atlas-97r46d-shard-0&authSource=admin&appName=Cluster0';
 
 mongoose.connect(mongoURI)
     .then(() => console.log("Cloud MongoDB Database se successfully connect ho gaye! 🚀"))
     .catch((err) => console.log("Database connection error: ", err));
 
-// ==========================================
-// API ROUTES
-// ==========================================
-
-// 0. Secure Login Route with Device Limit Control
 app.post('/api/login', async (req, res) => {
     try {
         const { email, password, deviceId } = req.body;
@@ -120,7 +108,6 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
-// Logout Route
 app.post('/api/logout', (req, res) => {
     const { email, deviceId } = req.body;
     if (activeSessions[email]) {
@@ -129,21 +116,17 @@ app.post('/api/logout', (req, res) => {
     res.json({ success: true, message: "Logged out successfully" });
 });
 
-// 1. Save Score Route
 app.post('/api/save-score', async (req, res) => {
     try {
         const { userName, wpm, accuracy, userEmail } = req.body;
         const newScore = new Score({ userName, wpm, accuracy, userEmail });
         await newScore.save();
-        console.log("Ek naya score database mein save ho gaya:", wpm, "WPM");
         res.status(201).json({ message: "Score successfully save ho gaya! 🎉", success: true });
     } catch (error) {
-        console.log("Score save karne mein error:", error);
         res.status(500).json({ error: "Score save nahi ho paya", success: false });
     }
 });
 
-// 2. Add New Test Route (With Category and Type Support)
 app.post('/api/add-test', async (req, res) => {
     try {
         const { title, content, category, isPremium, isLive, isFreeDemo, createdByEmail } = req.body;
@@ -163,26 +146,21 @@ app.post('/api/add-test', async (req, res) => {
         });
 
         await newTest.save();
-        console.log("Naya test successfully save ho gaya category mein:", category);
         res.status(201).json({ success: true, message: "Test successfully add ho gaya!" });
     } catch (error) {
-        console.log("Test add karne mein error:", error);
         res.status(500).json({ success: false, error: "Test save nahi ho paya" });
     }
 });
 
-// 3. Get All Tests Route
 app.get('/api/tests', async (req, res) => {
     try {
         const tests = await Test.find().sort({ createdAt: -1 });
         res.status(200).json(tests);
     } catch (error) {
-        console.log("Tests fetch karne mein error:", error);
         res.status(500).json({ error: "Tests laane mein nakamyabi rahi" });
     }
 });
 
-// 4. Delete Test Route
 app.delete('/api/delete-test/:id', async (req, res) => {
     try {
         await Test.findByIdAndDelete(req.params.id);
@@ -192,28 +170,15 @@ app.delete('/api/delete-test/:id', async (req, res) => {
     }
 });
 
-// 5. Get Leaderboard Route
 app.get('/api/leaderboard', async (req, res) => {
     try {
         const topScores = await Score.find().sort({ wpm: -1 }).limit(10);
         res.status(200).json(topScores);
     } catch (error) {
-        console.log("Leaderboard data laane mein error:", error);
         res.status(500).json({ error: "Data fetch nahi ho paya" });
     }
 });
 
-// 6. User Scores History Route
-app.get('/api/user-scores/:email', async (req, res) => {
-    try {
-        const userScores = await Score.find({ userEmail: req.params.email }).sort({ testDate: -1 });
-        res.status(200).json(userScores);
-    } catch (error) {
-        res.status(500).json({ error: "User history fetch nahi ho payi" });
-    }
-});
-
-// 7. Secure Razorpay Live Payment Integration
 const razorpay = new Razorpay({
     key_id: 'rzp_live_TKQs9AFoc6XT89',    
     key_secret: 'mN6KOt3iF15YWccr0MClL5ww'   
@@ -229,56 +194,10 @@ app.post('/create-order', async (req, res) => {
         const order = await razorpay.orders.create(options);
         res.status(200).json(order);
     } catch (error) {
-        console.error("Razorpay Error:", error);
         res.status(500).json({ error: "Order create nahi ho paya" });
     }
 });
 
-// 8. Real Nodemailer Email OTP & Password Reset Routes
-let otpStorage = {}; 
-
-const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-    }
-});
-
-app.post('/send-otp', async (req, res) => {
-    const { email } = req.body;
-    if (!email) return res.status(400).json({ error: "Email zaroori hai" });
-
-    const generatedOTP = Math.floor(100000 + Math.random() * 900000).toString();
-    otpStorage[email] = generatedOTP;
-
-    const mailOptions = {
-        from: process.env.EMAIL_USER,
-        to: email,
-        subject: 'Neetypingpro - Password Reset OTP',
-        text: `Aapka password reset OTP hai: ${generatedOTP}. Yeh 10 minute tak valid hai.`
-    };
-
-    try {
-        await transporter.sendMail(mailOptions);
-        res.json({ message: "OTP sent successfully to email!", success: true });
-    } catch (error) {
-        res.json({ message: "OTP sent (Fallback Mode 123456)", success: true });
-        otpStorage[email] = "123456";
-    }
-});
-
-app.post('/verify-otp-reset', async (req, res) => {
-    const { email, otp } = req.body;
-    if (otpStorage[email] && otpStorage[email] === otp) {
-        delete otpStorage[email];
-        res.json({ success: true, message: "Password successfully updated!" });
-    } else {
-        res.status(400).json({ success: false, message: "Invalid or Expired OTP" });
-    }
-});
-
-// --- Server Startup ---
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });

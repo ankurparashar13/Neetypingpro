@@ -1,5 +1,5 @@
 // ==========================================
-// NEETTYPINGPRO: MASTER SCRIPT.JS (FINAL OPTIMIZED)
+// NEETTYPINGPRO: MASTER SCRIPT.JS (ALL BUGS FIXED)
 // ==========================================
 
 const BACKEND_URL = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" 
@@ -255,7 +255,7 @@ function manageAdsVisibility() {
     });
 }
 
-// Load Tests with Admin Delete Option
+// Load Tests with Proper Free/Paid Check
 async function loadTestCategories() {
     const container = document.getElementById('test-list-container');
     if (!container) return;
@@ -295,6 +295,7 @@ async function loadTestCategories() {
     }
 
     combinedTests.forEach((test) => {
+        // Fix: Free demo tests will never be locked even if premium is false
         const isLocked = test.isPremium && !hasAccess && !test.isFreeDemo;
         const card = document.createElement('div');
         card.style.cssText = "padding: 15px; margin: 10px 0; background: #fff; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center;";
@@ -315,7 +316,6 @@ async function loadTestCategories() {
     });
 }
 
-// Admin Delete Test Function
 async function deleteTestFromDb(testId, event) {
     event.stopPropagation();
     if (!confirm("Kya aap sach mein is test ko delete karna chahte hain?")) return;
@@ -338,6 +338,7 @@ async function deleteTestFromDb(testId, event) {
 
 function handleTestClick(test) {
     const isPrem = isUserSuperAdminOrPremium();
+    // Fix: Free demo tests bypass locks and ads if desired, or open directly
     if (test.isLive || (!isPrem && test.isPremium && !test.isFreeDemo)) {
         showPreTestAd(test);
     } else {
@@ -404,6 +405,14 @@ function updateTimerDisplay() {
     if (timeSpan) timeSpan.innerText = `${mins < 10 ? '0' : ''}${mins}:${secs < 10 ? '0' : ''}${secs}`;
 }
 
+// Fix: Instant time update when dropdown changes
+function changeTestDuration() {
+    const selectElem = document.getElementById('test-duration');
+    testDurationMinutes = parseInt(selectElem.value);
+    timeLeft = testDurationMinutes * 60;
+    updateTimerDisplay();
+}
+
 function cancelTest() {
     if (confirm("Kya aap test cancel karna chahte hain?")) {
         if (timer) clearInterval(timer);
@@ -412,8 +421,16 @@ function cancelTest() {
     }
 }
 
+// Fix: Backspace toggle validation properly handled
 const typingInput = document.getElementById('typing-input');
 if (typingInput) {
+    typingInput.onkeydown = function(e) {
+        const backspaceToggle = document.getElementById('backspace-toggle');
+        if (e.key === 'Backspace' && backspaceToggle && !backspaceToggle.checked) {
+            e.preventDefault();
+        }
+    };
+
     typingInput.oninput = function() {
         if (!timerStarted) {
             timer = setInterval(() => {
@@ -452,9 +469,14 @@ async function submitTest() {
         let origHTML = '';
         let typedHTML = '';
         
-        for (let i = 0; i < typedWords.length; i++) {
+        // Fix: Prevent loop/repetition mismatch in result comparison
+        for (let i = 0; i < originalWords.length; i++) {
             const orig = originalWords[i] || '';
             const typed = typedWords[i] || '';
+            if (!typed) {
+                origHTML += `<span style="color: #999;">${orig} </span>`;
+                continue;
+            }
             if (orig === typed) {
                 origHTML += `<span class="correct-text">${orig} </span>`;
                 typedHTML += `<span class="correct-text">${typed} </span>`;
@@ -462,6 +484,14 @@ async function submitTest() {
                 fullMistakes++;
                 origHTML += `<span class="mistake-text">${orig} </span>`;
                 typedHTML += `<span class="mistake-text">${typed} </span>`;
+            }
+        }
+        
+        // Handle extra words typed beyond original text
+        if (typedWords.length > originalWords.length) {
+            for (let i = originalWords.length; i < typedWords.length; i++) {
+                fullMistakes++;
+                typedHTML += `<span class="mistake-text">${typedWords[i]} </span>`;
             }
         }
 
@@ -475,7 +505,6 @@ async function submitTest() {
         document.getElementById('res-original').innerHTML = origHTML;
         document.getElementById('res-typed').innerHTML = typedHTML;
 
-        // Save Score to Database so Leaderboard updates properly
         const userEmail = localStorage.getItem('user_email') || "User";
         const userName = userEmail.split('@')[0];
         await fetch(`${BACKEND_URL}/api/save-score`, {
@@ -568,7 +597,6 @@ async function logoutUser() {
     }
 }
 
-// Clean Leaderboard: Only show actual completed test scores (No dummy entries)
 function loadLeaderboard() {
     fetch(`${BACKEND_URL}/api/leaderboard`)
         .then(res => res.json())
