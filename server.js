@@ -20,25 +20,27 @@ const userSchema = new mongoose.Schema({
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     isPremium: { type: Boolean, default: false },
-    subscriptionType: { type: String, default: 'basic' }, // 'basic' (₹99) ya 'institute' (₹999)
+    subscriptionType: { type: String, default: 'basic' }, 
     subscriptionExpiry: { type: Date, default: null },
     createdAt: { type: Date, default: Date.now }
 });
 const User = mongoose.model('User', userSchema);
 
 // Active Sessions Tracker for Device Limits (In-memory store)
-const activeSessions = {}; // { userEmail: [deviceId1, deviceId2, ...] }
+const activeSessions = {}; 
 
 // 2. Test Schema (Data Privacy & Custom Tests with Creator Info & Live Status)
 const testSchema = new mongoose.Schema({
     title: { type: String, required: true },
     content: { type: String, required: true }, 
+    category: { type: String, default: 'delhi-hc' }, // Exam specific folders
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: false }, 
     createdByEmail: { type: String, default: "neetypingpro@gmail.com" },
     isAdminTest: { type: Boolean, default: false },
     isPublic: { type: Boolean, default: true }, 
     isPremium: { type: Boolean, default: false },
-    isLive: { type: Boolean, default: false }, // Admin control for Live AIR Contests
+    isFreeDemo: { type: Boolean, default: false },
+    isLive: { type: Boolean, default: false }, 
     createdAt: { type: Date, default: Date.now }
 });
 const Test = mongoose.model('Test', testSchema);
@@ -70,7 +72,7 @@ const competitionSchema = new mongoose.Schema({
 });
 const Competition = mongoose.model('Competition', competitionSchema);
 
-// --- Secure MongoDB Connection (Using Environment Variables) ---
+// --- Secure MongoDB Connection ---
 const mongoURI = 'mongodb://ankurparashar1312_db_user:ankur2@ac-t2amnzl-shard-00-00.gbzcmt5.mongodb.net:27017,ac-t2amnzl-shard-00-01.gbzcmt5.mongodb.net:27017,ac-t2amnzl-shard-00-02.gbzcmt5.mongodb.net:27017/anktyping?ssl=true&replicaSet=atlas-97r46d-shard-0&authSource=admin&appName=Cluster0';
 
 mongoose.connect(mongoURI)
@@ -78,7 +80,7 @@ mongoose.connect(mongoURI)
     .catch((err) => console.log("Database connection error: ", err));
 
 // ==========================================
-// API ROUTES (Score, Tests, Auth, OTP, Payments & Login Device Control)
+// API ROUTES
 // ==========================================
 
 // 0. Secure Login Route with Device Limit Control
@@ -97,22 +99,19 @@ app.post('/api/login', async (req, res) => {
 
         const currentDevices = activeSessions[email];
 
-        // Agar yeh device pehle se logged-in hai toh allow kar do
         if (currentDevices.includes(deviceId)) {
             return res.json({ success: true, message: "Login successful", user });
         }
 
-        // Plan limits: Basic/Student (₹99) = 1 PC, Institute (₹999) = 10 PCs
         const maxLimit = (user.subscriptionType === 'institute') ? 10 : 1;
 
         if (currentDevices.length >= maxLimit) {
             return res.status(403).json({ 
                 success: false, 
-                error: `Device limit reached! Your plan allows maximum ${maxLimit} active login(s). Please logout from another device or upgrade to the Institute plan.` 
+                error: `Device limit reached! Your plan allows maximum ${maxLimit} active login(s).` 
             });
         }
 
-        // Naya device register karein
         currentDevices.push(deviceId);
         res.json({ success: true, message: "Login successful", user });
     } catch (error) {
@@ -137,7 +136,6 @@ app.post('/api/save-score', async (req, res) => {
         const newScore = new Score({ userName, wpm, accuracy, userEmail });
         await newScore.save();
         console.log("Ek naya score database mein save ho gaya:", wpm, "WPM");
-        app.locals.lastSavedScore = newScore; 
         res.status(201).json({ message: "Score successfully save ho gaya! 🎉", success: true });
     } catch (error) {
         console.log("Score save karne mein error:", error);
@@ -145,45 +143,27 @@ app.post('/api/save-score', async (req, res) => {
     }
 });
 
-// 2. Add New Test Route (Smart Security: Admin vs Premium Users)
+// 2. Add New Test Route (With Category and Type Support)
 app.post('/api/add-test', async (req, res) => {
     try {
-        const { title, content, isPremium, isLive, createdByEmail } = req.body;
+        const { title, content, category, isPremium, isLive, isFreeDemo, createdByEmail } = req.body;
         const DEVELOPER_EMAIL = "neetypingpro@gmail.com";
         const isAdmin = (createdByEmail === DEVELOPER_EMAIL);
 
-        const user = await User.findOne({ email: createdByEmail });
-        const isUserPremium = user ? (user.isPremium || user.subscriptionType === 'institute' || user.subscriptionType === 'basic') : false;
-
-        if (!isAdmin && !isUserPremium) {
-            return res.status(403).json({ success: false, error: "Access Denied! Free users test add nahi kar sakte." });
-        }
-
-        let newTest;
-        if (isAdmin) {
-            newTest = new Test({
-                title,
-                content,
-                isPremium: isPremium || false,
-                isLive: isLive || false,
-                createdByEmail: DEVELOPER_EMAIL,
-                isAdminTest: true,
-                isPublic: true
-            });
-        } else {
-            newTest = new Test({
-                title,
-                content,
-                isPremium: false,
-                isLive: false,
-                createdByEmail: createdByEmail,
-                isAdminTest: false,
-                isPublic: true
-            });
-        }
+        const newTest = new Test({
+            title,
+            content,
+            category: category || 'delhi-hc',
+            isPremium: isPremium || false,
+            isLive: isLive || false,
+            isFreeDemo: isFreeDemo || false,
+            createdByEmail: createdByEmail || DEVELOPER_EMAIL,
+            isAdminTest: isAdmin,
+            isPublic: true
+        });
 
         await newTest.save();
-        console.log("Naya test database mein save ho gaya:", title);
+        console.log("Naya test successfully save ho gaya category mein:", category);
         res.status(201).json({ success: true, message: "Test successfully add ho gaya!" });
     } catch (error) {
         console.log("Test add karne mein error:", error);
@@ -194,7 +174,7 @@ app.post('/api/add-test', async (req, res) => {
 // 3. Get All Tests Route
 app.get('/api/tests', async (req, res) => {
     try {
-        const tests = await Test.find();
+        const tests = await Test.find().sort({ createdAt: -1 });
         res.status(200).json(tests);
     } catch (error) {
         console.log("Tests fetch karne mein error:", error);
@@ -237,7 +217,7 @@ app.get('/api/user-scores/:email', async (req, res) => {
 const razorpay = new Razorpay({
     key_id: 'rzp_live_TKQs9AFoc6XT89',    
     key_secret: 'mN6KOt3iF15YWccr0MClL5ww'   
-});;
+});
 
 app.post('/create-order', async (req, res) => {
     try {
@@ -255,7 +235,7 @@ app.post('/create-order', async (req, res) => {
 });
 
 // 8. Real Nodemailer Email OTP & Password Reset Routes
-let otpStorage = {}; // Temporary memory for OTP verification
+let otpStorage = {}; 
 
 const transporter = nodemailer.createTransport({
     service: 'gmail',
@@ -281,10 +261,8 @@ app.post('/send-otp', async (req, res) => {
 
     try {
         await transporter.sendMail(mailOptions);
-        console.log(`Real OTP ${generatedOTP} sent successfully to ${email}`);
         res.json({ message: "OTP sent successfully to email!", success: true });
     } catch (error) {
-        console.log("Email sending error:", error);
         res.json({ message: "OTP sent (Fallback Mode 123456)", success: true });
         otpStorage[email] = "123456";
     }
@@ -297,24 +275,6 @@ app.post('/verify-otp-reset', async (req, res) => {
         res.json({ success: true, message: "Password successfully updated!" });
     } else {
         res.status(400).json({ success: false, message: "Invalid or Expired OTP" });
-    }
-});
-
-// 9. Live Competition / AIR (All India Rank) Routes
-app.post('/api/competition/submit', async (req, res) => {
-    try {
-        const { competitionId, userEmail, userName, wpm, accuracy } = req.body;
-        const competition = await Competition.findById(competitionId);
-        if (!competition) return res.status(404).json({ error: "Competition nahi mila" });
-
-        competition.participants.push({ userEmail, userName, wpm, accuracy });
-        competition.participants.sort((a, b) => b.wpm - a.wpm);
-        await competition.save();
-
-        const rank = competition.participants.findIndex(p => p.userEmail === userEmail) + 1;
-        res.status(200).json({ success: true, rank, totalParticipants: competition.participants.length });
-    } catch (error) {
-        res.status(500).json({ error: "Competition score submit nahi ho paya" });
     }
 });
 
