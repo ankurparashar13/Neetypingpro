@@ -150,30 +150,17 @@ window.onload = function() {
     if (loginForm) {
        loginForm.onsubmit = async function(e) {
             e.preventDefault();
-            const email = document.getElementById('login-email').value.trim();
-            const password = document.getElementById('login-password').value.trim();
-            
-            try {
-                const response = await fetch(`${BACKEND_URL}/api/login`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, password, deviceId: getDeviceId() })
-                });
-                const data = await response.json();
-                if (data.success || email === DEVELOPER_EMAIL) {
-                    alert("Login successful! 🎉");
-                    localStorage.setItem('user_email', email);
-                    localStorage.setItem('is_logged_in', 'true');
-                    if (email === DEVELOPER_EMAIL) localStorage.setItem('neetyping_premium', 'true');
-                    hideLoginShowHome(); 
-                } else {
-                    alert(data.error || "Login failed!");
-                }
-            } catch (err) {
-                localStorage.setItem('user_email', email);
-                localStorage.setItem('is_logged_in', 'true');
-                if (email === DEVELOPER_EMAIL) localStorage.setItem('neetyping_premium', 'true');
-                hideLoginShowHome();
+            await processLogin();
+        };
+    }
+
+    // Enter Key Support for Login inputs
+    const loginPasswordInput = document.getElementById('login-password');
+    if (loginPasswordInput) {
+        loginPasswordInput.onkeydown = async function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                await processLogin();
             }
         };
     }
@@ -192,6 +179,34 @@ window.onload = function() {
     loadLeaderboard();
     manageAdsVisibility();
 };
+
+async function processLogin() {
+    const email = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value.trim();
+    
+    try {
+        const response = await fetch(`${BACKEND_URL}/api/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password, deviceId: getDeviceId() })
+        });
+        const data = await response.json();
+        if (data.success || email === DEVELOPER_EMAIL) {
+            alert("Login successful! 🎉");
+            localStorage.setItem('user_email', email);
+            localStorage.setItem('is_logged_in', 'true');
+            if (email === DEVELOPER_EMAIL) localStorage.setItem('neetyping_premium', 'true');
+            hideLoginShowHome(); 
+        } else {
+            alert(data.error || "Login failed!");
+        }
+    } catch (err) {
+        localStorage.setItem('user_email', email);
+        localStorage.setItem('is_logged_in', 'true');
+        if (email === DEVELOPER_EMAIL) localStorage.setItem('neetyping_premium', 'true');
+        hideLoginShowHome();
+    }
+}
 
 function hideLoginShowHome() {
     document.getElementById('login-page').style.display = 'none';
@@ -255,7 +270,7 @@ function manageAdsVisibility() {
     });
 }
 
-// Load Tests with Proper Free/Paid Check
+// Load Tests with Fixed Free/Paid & Delete Support
 async function loadTestCategories() {
     const container = document.getElementById('test-list-container');
     if (!container) return;
@@ -280,6 +295,7 @@ async function loadTestCategories() {
                     isPremium: test.isPremium,
                     isLive: test.isLive,
                     isFreeDemo: test.isFreeDemo,
+                    createdByEmail: test.createdByEmail,
                     isDbTest: true
                 });
             }
@@ -295,20 +311,27 @@ async function loadTestCategories() {
     }
 
     combinedTests.forEach((test) => {
-        // Fix: Free demo tests will never be locked even if premium is false
-        const isLocked = test.isPremium && !hasAccess && !test.isFreeDemo;
+        // Fix: Explicitly handle free demo tests so they never show as paid
+        const isFree = test.isFreeDemo || (!test.isPremium && !test.isLive);
+        const isLocked = test.isPremium && !hasAccess && !isFree;
+        
         const card = document.createElement('div');
         card.style.cssText = "padding: 15px; margin: 10px 0; background: #fff; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center;";
         
-        let deleteBtnHtml = isAdmin ? `<button onclick="deleteTestFromDb('${test.id}', event)" style="background: #e74c3c; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; margin-left: 10px; font-size: 12px;">Delete</button>` : '';
+        let deleteBtnHtml = (isAdmin || test.createdByEmail === currentUserEmail) 
+            ? `<button onclick="deleteTestFromDb('${test.id}', event)" style="background: #e74c3c; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; margin-left: 10px; font-weight: bold; font-size: 12px;">Delete</button>` 
+            : '';
+
+        let badgeText = isLocked ? '🔒 [LOCKED]' : (test.isLive ? '🔴 [LIVE]' : (isFree ? '🟢 [FREE]' : '💎 [PAID]'));
+        let badgeColor = isFree ? '#27ae60' : (test.isLive ? '#e74c3c' : '#6a0dad');
 
         card.innerHTML = `
-            <div style="cursor: pointer; flex: 1;" onclick="handleTestClick(${JSON.stringify(test).replace(/"/g, '&quot;')})">
+            <div style="cursor: pointer; flex: 1;" onclick='handleTestClick(${JSON.stringify(test)})'>
                 <h4 style="margin: 0 0 5px 0; color: #333;">${test.title}</h4>
                 <p style="margin: 0; font-size: 13px; color: #666;">Exam: ${test.category.toUpperCase()} | Words: ~${test.content.split(/\s+/).length}</p>
             </div>
             <div style="display: flex; align-items: center; gap: 10px;">
-                <span style="cursor: pointer;" onclick="handleTestClick(${JSON.stringify(test).replace(/"/g, '&quot;')})">${isLocked ? '🔒 [LOCKED]' : (test.isLive ? '🔴 [LIVE]' : (test.isFreeDemo ? '🟢 [FREE]' : '💎 [PAID]'))}</span>
+                <span style="font-weight: bold; color: ${badgeColor}; cursor: pointer;" onclick='handleTestClick(${JSON.stringify(test)})'>${badgeText}</span>
                 ${deleteBtnHtml}
             </div>
         `;
@@ -318,7 +341,7 @@ async function loadTestCategories() {
 
 async function deleteTestFromDb(testId, event) {
     event.stopPropagation();
-    if (!confirm("Kya aap sach mein is test ko delete karna chahte hain?")) return;
+    if (!confirm("Kya aap sach mein is test को delete karna chahte hain?")) return;
 
     try {
         const response = await fetch(`${BACKEND_URL}/api/delete-test/${testId}`, {
@@ -338,8 +361,8 @@ async function deleteTestFromDb(testId, event) {
 
 function handleTestClick(test) {
     const isPrem = isUserSuperAdminOrPremium();
-    // Fix: Free demo tests bypass locks and ads if desired, or open directly
-    if (test.isLive || (!isPrem && test.isPremium && !test.isFreeDemo)) {
+    const isFree = test.isFreeDemo || (!test.isPremium && !test.isLive);
+    if (test.isLive || (!isPrem && test.isPremium && !isFree)) {
         showPreTestAd(test);
     } else {
         startTest(test);
@@ -405,7 +428,6 @@ function updateTimerDisplay() {
     if (timeSpan) timeSpan.innerText = `${mins < 10 ? '0' : ''}${mins}:${secs < 10 ? '0' : ''}${secs}`;
 }
 
-// Fix: Instant time update when dropdown changes
 function changeTestDuration() {
     const selectElem = document.getElementById('test-duration');
     testDurationMinutes = parseInt(selectElem.value);
@@ -421,7 +443,6 @@ function cancelTest() {
     }
 }
 
-// Fix: Backspace toggle validation properly handled
 const typingInput = document.getElementById('typing-input');
 if (typingInput) {
     typingInput.onkeydown = function(e) {
@@ -469,7 +490,6 @@ async function submitTest() {
         let origHTML = '';
         let typedHTML = '';
         
-        // Fix: Prevent loop/repetition mismatch in result comparison
         for (let i = 0; i < originalWords.length; i++) {
             const orig = originalWords[i] || '';
             const typed = typedWords[i] || '';
@@ -487,7 +507,6 @@ async function submitTest() {
             }
         }
         
-        // Handle extra words typed beyond original text
         if (typedWords.length > originalWords.length) {
             for (let i = originalWords.length; i < typedWords.length; i++) {
                 fullMistakes++;
