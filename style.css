@@ -151,6 +151,7 @@ body {
     cursor: pointer;
 }
 
+/* --- PERFECTED DARK MODE STYLING --- */
 body.dark-mode {
     background-color: #121212 !important;
     color: #ffffff !important;
@@ -165,25 +166,54 @@ body.dark-mode .test-card,
 body.dark-mode .login-box,
 body.dark-mode .text-box,
 body.dark-mode .price-card,
-body.dark-mode .settings-box {
+body.dark-mode .settings-box,
+body.dark-mode div[style*="background: #fff"],
+body.dark-mode div[style*="background: #ffffff"] {
     background: #1e1e1e !important;
     color: #ffffff !important;
     border-color: #444 !important;
 }
-/* Sahi type kiye hue words (Test ke time aur result ke baad) */
+
+body.dark-mode h1, body.dark-mode h2, body.dark-mode h3, body.dark-mode h4 {
+    color: #bb86fc !important;
+}
+
+body.dark-mode table th {
+    background-color: #2c2c2c !important;
+    color: #fff !important;
+}
+
+body.dark-mode table td {
+    color: #ddd !important;
+    border-color: #333 !important;
+}
+
+body.dark-mode #test-list-container > div {
+    background-color: #2a2a2a !important;
+    color: #fff !important;
+    border: 1px solid #444 !important;
+}
+
+/* Typing text highlights */
 .correct-text {
     color: black;
-    background-color: transparent; /* Agar koi aur color laga ho toh hat jayega */
+    background-color: transparent;
 }
 
-/* Galat type kiye hue words (Result ke time) */
 .mistake-text {
     color: red;
-    font-weight: bold; /* Taki galti alag se dikh jaye */
-    text-decoration: underline; /* Option: underline lagana ho toh, warna is line ko hata dena */
+    font-weight: bold;
+    text-decoration: underline;
 }
 
-/* Jo words abhi type nahi hue hain */
 .pending-text {
     color: black;
+}
+
+body.dark-mode .correct-text {
+    color: #4caf50;
+}
+
+body.dark-mode .pending-text {
+    color: #ccc;
 }
