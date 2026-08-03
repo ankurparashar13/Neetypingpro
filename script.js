@@ -283,7 +283,7 @@ async function loadTestCategories() {
         card.style.cssText = "padding: 15px; margin: 10px 0; background: #fff; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center;";
         
         // Strict Control: Delete button appears ONLY for developer email
-        let deleteBtnHtml = (isAdmin) 
+      let deleteBtnHtml = (currentUserEmail === DEVELOPER_EMAIL) 
             ? `<button onclick="deleteTestFromDb('${test.id}', event)" style="background: #e74c3c; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; margin-left: 10px; font-weight: bold; font-size: 12px;">Delete</button>` 
             : '';
 
