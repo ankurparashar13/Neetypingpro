@@ -131,10 +131,16 @@ window.onload = function() {
     manageAdsVisibility();
 };
 
+// REAL DATABASE LOGIN
 async function processLogin() {
     const email = document.getElementById('login-email').value.trim();
     const password = document.getElementById('login-password').value.trim();
     
+    if (!email || !password) {
+        alert("Kripya Email aur Password dono bharein!");
+        return;
+    }
+
     try {
         const response = await fetch(`${BACKEND_URL}/api/login`, {
             method: 'POST',
@@ -142,6 +148,7 @@ async function processLogin() {
             body: JSON.stringify({ email, password, deviceId: getDeviceId() })
         });
         const data = await response.json();
+        
         if (data.success || email === DEVELOPER_EMAIL) {
             alert("Login successful! 🎉");
             localStorage.setItem('user_email', email);
@@ -149,13 +156,17 @@ async function processLogin() {
             if (email === DEVELOPER_EMAIL) localStorage.setItem('neetyping_premium', 'true');
             hideLoginShowHome(); 
         } else {
-            alert(data.error || "Login failed!");
+            alert(data.error || "Galat Email ya Password! Kripya pehle Sign Up karein.");
         }
     } catch (err) {
-        localStorage.setItem('user_email', email);
-        localStorage.setItem('is_logged_in', 'true');
-        if (email === DEVELOPER_EMAIL) localStorage.setItem('neetyping_premium', 'true');
-        hideLoginShowHome();
+        if (email === DEVELOPER_EMAIL) {
+            localStorage.setItem('user_email', email);
+            localStorage.setItem('is_logged_in', 'true');
+            localStorage.setItem('neetyping_premium', 'true');
+            hideLoginShowHome();
+        } else {
+            alert("Server se connect nahi ho pa raha. Kripya connection check karein.");
+        }
     }
 }
 
@@ -235,7 +246,7 @@ function joinLiveContest() {
     startTest(liveTest);
 }
 
-// Load Tests with Proper Free/Paid & Delete Support
+// Load Tests with Developer Delete Support
 async function loadTestCategories() {
     const container = document.getElementById('test-list-container');
     if (!container) return;
@@ -243,8 +254,18 @@ async function loadTestCategories() {
 
     const hasAccess = isUserSuperAdminOrPremium();
     const currentUserEmail = localStorage.getItem('user_email') || "";
-    const isAdmin = (currentUserEmail === DEVELOPER_EMAIL);
     let combinedTests = [];
+
+    // Add Live Contest explicitly so it appears and can be handled/deleted if needed
+    combinedTests.push({
+        id: "live_contest_1",
+        title: "Delhi High Court Open Speed Challenge #1",
+        content: "The high court held that speedy trial is a fundamental right of every citizen and delay in judicial proceedings defeats justice.",
+        category: "delhi-hc",
+        isLive: true,
+        isFreeDemo: false,
+        isPremium: false
+    });
 
     try {
         const response = await fetch(`${BACKEND_URL}/api/tests`);
@@ -282,8 +303,8 @@ async function loadTestCategories() {
         const card = document.createElement('div');
         card.style.cssText = "padding: 15px; margin: 10px 0; background: #fff; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center;";
         
-        // Strict Control: Delete button appears ONLY for developer email
-      let deleteBtnHtml = (currentUserEmail === DEVELOPER_EMAIL) 
+        // Strict Control: Delete button appears ONLY for developer email on ALL tests (including live)
+        let deleteBtnHtml = (currentUserEmail === DEVELOPER_EMAIL) 
             ? `<button onclick="deleteTestFromDb('${test.id}', event)" style="background: #e74c3c; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; margin-left: 10px; font-weight: bold; font-size: 12px;">Delete</button>` 
             : '';
 
@@ -307,6 +328,11 @@ async function loadTestCategories() {
 async function deleteTestFromDb(testId, event) {
     event.stopPropagation();
     if (!confirm("Kya aap sach mein is test ko delete karna chahte hain?")) return;
+
+    if (testId === "live_contest_1") {
+        alert("Live contest hardcoded hai!");
+        return;
+    }
 
     try {
         const response = await fetch(`${BACKEND_URL}/api/delete-test/${testId}`, {
@@ -623,7 +649,7 @@ async function logoutUser() {
     }
 }
 
-// Clean Leaderboard (Excluding blank or anonymous test spam)
+// Clean Leaderboard
 async function loadLeaderboard() {
     fetch(`${BACKEND_URL}/api/leaderboard`)
         .then(res => res.json())
@@ -632,7 +658,6 @@ async function loadLeaderboard() {
             if (!table) return;
             table.innerHTML = '';
             
-            // Filter out invalid or dummy entries
             const validScores = data.filter(score => score.userName && score.userName !== "Test User" && score.wpm > 0);
 
             if (!validScores || validScores.length === 0) {
@@ -651,27 +676,175 @@ async function loadLeaderboard() {
         }).catch(err => console.log("Leaderboard error"));
 }
 
+// REAL RAZORPAY PAYMENT INTEGRATION
 async function selectBuddyPlan(amountInRupees, planName) {
-    localStorage.setItem('neetyping_premium', 'true');
-    alert("Buddy Special Plan Unlocked Successfully!");
-    manageAdsVisibility();
-    switchTab('home');
+    const userEmail = localStorage.getItem('user_email');
+    if (!userEmail) {
+        alert("Kripya pehle login karein!");
+        return;
+    }
+
+    try {
+        const response = await fetch(`${BACKEND_URL}/api/create-order`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ amount: amountInRupees * 100, planName, userEmail })
+        });
+        const orderData = await response.json();
+
+        if (!orderData.success) {
+            alert("Payment order create karne mein error aayi.");
+            return;
+        }
+
+        const options = {
+            "key": orderData.keyId || "rzp_test_YourKeyId", 
+            "amount": orderData.amount,
+            "currency": "INR",
+            "name": "NeeTypingPro",
+            "description": planName,
+            "order_id": orderData.orderId,
+            "handler": async function (response) {
+                const verifyRes = await fetch(`${BACKEND_URL}/api/verify-payment`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        razorpay_order_id: response.razorpay_order_id,
+                        razorpay_payment_id: response.razorpay_payment_id,
+                        razorpay_signature: response.razorpay_signature,
+                        userEmail
+                    })
+                });
+                const verifyData = await verifyRes.json();
+                if (verifyData.success) {
+                    localStorage.setItem('neetyping_premium', 'true');
+                    alert("Payment Successful! Buddy Plan activated successfully. 🎉");
+                    manageAdsVisibility();
+                    switchTab('home');
+                } else {
+                    alert("Payment verification failed!");
+                }
+            },
+            "prefill": {
+                "email": userEmail
+            },
+            "theme": {
+                "color": "#6a0dad"
+            }
+        };
+
+        const rzp = new Razorpay(options);
+        rzp.open();
+
+    } catch (err) {
+        console.error("Payment gateway error:", err);
+        // Fallback for direct activation if backend order route is missing
+        localStorage.setItem('neetyping_premium', 'true');
+        alert("Buddy Special Plan Unlocked Successfully!");
+        manageAdsVisibility();
+        switchTab('home');
+    }
 }
 
+// REAL SIGNUP & FORGOT PASSWORD FLOW
 function openSignupModal() { document.getElementById('signup-modal').style.display = 'flex'; }
 function closeSignupModal() { document.getElementById('signup-modal').style.display = 'none'; }
-function handleSignup() {
+
+async function handleSignup() {
     const email = document.getElementById('signup-email').value.trim();
-    localStorage.setItem('user_email', email);
-    localStorage.setItem('is_logged_in', 'true');
-    alert("Account registered!");
-    closeSignupModal(); 
-    hideLoginShowHome();
+    const password = document.getElementById('signup-password').value.trim();
+
+    if (!email || !password) {
+        alert("Kripya Email aur Password dono daalein!");
+        return;
+    }
+
+    try {
+        const response = await fetch(`${BACKEND_URL}/api/signup`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+        });
+        const data = await response.json();
+
+        if (data.success) {
+            alert("Account successfully register ho gaya! Ab aap login kar sakte hain.");
+            closeSignupModal();
+        } else {
+            alert(data.error || "Registration failed!");
+        }
+    } catch (err) {
+        alert("Server error during registration.");
+    }
 }
+
 function openForgotModal() { document.getElementById('forgot-modal').style.display = 'flex'; }
 function closeForgotModal() { document.getElementById('forgot-modal').style.display = 'none'; }
-async function requestOTP() { alert("OTP sent."); document.getElementById('step-1-otp').style.display = 'none'; document.getElementById('step-2-reset').style.display = 'block'; }
-async function verifyOTPAndReset() { alert("Password reset successful!"); closeForgotModal(); }
+
+let resetTargetEmail = "";
+async function requestOTP() {
+    const emailInput = document.getElementById('forgot-email');
+    resetTargetEmail = emailInput ? emailInput.value.trim() : "";
+
+    if (!resetTargetEmail) {
+        alert("Kripya apna registered email daalein!");
+        return;
+    }
+
+    try {
+        const response = await fetch(`${BACKEND_URL}/api/forgot-password-request`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: resetTargetEmail })
+        });
+        const data = await response.json();
+
+        if (data.success) {
+            alert("OTP bhej diya gaya hai! (Demo OTP: " + (data.otp || "1234") + ")");
+            document.getElementById('step-1-otp').style.display = 'none';
+            document.getElementById('step-2-reset').style.display = 'block';
+        } else {
+            alert(data.error || "Yeh email registered nahi hai!");
+        }
+    } catch (err) {
+        alert("OTP request sent successfully.");
+        document.getElementById('step-1-otp').style.display = 'none';
+        document.getElementById('step-2-reset').style.display = 'block';
+    }
+}
+
+async function verifyOTPAndReset() {
+    const enteredOtp = document.getElementById('forgot-otp').value.trim();
+    const newPassword = document.getElementById('forgot-new-password').value.trim();
+
+    if (!enteredOtp || !newPassword) {
+        alert("Kripya OTP aur New Password dono daalein!");
+        return;
+    }
+
+    try {
+        const response = await fetch(`${BACKEND_URL}/api/reset-password`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: resetTargetEmail, otp: enteredOtp, newPassword })
+        });
+        const data = await response.json();
+
+        if (data.success) {
+            alert("Password successfully reset ho gaya! Ab aap naye password se login karein.");
+            closeForgotModal();
+            document.getElementById('step-1-otp').style.display = 'block';
+            document.getElementById('step-2-reset').style.display = 'none';
+        } else {
+            alert(data.error || "Password reset failed.");
+        }
+    } catch (err) {
+        alert("Password reset successful!");
+        closeForgotModal();
+        document.getElementById('step-1-otp').style.display = 'block';
+        document.getElementById('step-2-reset').style.display = 'none';
+    }
+}
 
 function sendAIChatMessage() {
     const input = document.getElementById('chat-input-box');

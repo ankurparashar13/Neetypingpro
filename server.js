@@ -3,6 +3,7 @@ const Razorpay = require('razorpay');
 const cors = require('cors'); 
 const path = require('path');
 const nodemailer = require('nodemailer'); 
+const crypto = require('crypto');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
@@ -14,12 +15,13 @@ app.use(express.static(path.join(__dirname)));
 const mongoose = require('mongoose');
 
 const userSchema = new mongoose.Schema({
-    name: { type: String, required: true },
+    name: { type: String, required: false, default: "User" },
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     isPremium: { type: Boolean, default: false },
     subscriptionType: { type: String, default: 'basic' }, 
     subscriptionExpiry: { type: Date, default: null },
+    resetOtp: { type: String, default: null },
     createdAt: { type: Date, default: Date.now }
 });
 const User = mongoose.model('User', userSchema);
@@ -44,33 +46,41 @@ const Test = mongoose.model('Test', testSchema);
 const scoreSchema = new mongoose.Schema({
     userName: { type: String, default: "Anonymous" },
     userEmail: { type: String, default: "" }, 
+    testName: { type: String, default: "Practice Test" },
     wpm: { type: Number, required: true },
     accuracy: { type: Number, required: true },
     testDate: { type: Date, default: Date.now }
 });
 const Score = mongoose.model('Score', scoreSchema);
 
-const competitionSchema = new mongoose.Schema({
-    title: { type: String, required: true },
-    content: { type: String, required: true },
-    startTime: { type: Date, required: true },
-    durationMinutes: { type: Number, default: 10 },
-    participants: [{
-        userEmail: String,
-        userName: String,
-        wpm: Number,
-        accuracy: Number,
-        submittedAt: { type: Date, default: Date.now }
-    }],
-    isActive: { type: Boolean, default: true }
-});
-const Competition = mongoose.model('Competition', competitionSchema);
-
 const mongoURI = 'mongodb://ankurparashar1312_db_user:ankur2@ac-t2amnzl-shard-00-00.gbzcmt5.mongodb.net:27017,ac-t2amnzl-shard-00-01.gbzcmt5.mongodb.net:27017,ac-t2amnzl-shard-00-02.gbzcmt5.mongodb.net:27017/anktyping?ssl=true&replicaSet=atlas-97r46d-shard-0&authSource=admin&appName=Cluster0';
 
 mongoose.connect(mongoURI)
     .then(() => console.log("Cloud MongoDB Database se successfully connect ho gaye! 🚀"))
     .catch((err) => console.log("Database connection error: ", err));
+
+// REAL SIGNUP ENDPOINT
+app.post('/api/signup', async (req, res) => {
+    try {
+        const { email, password } = req.body;
+        const existingUser = await User.findOne({ email });
+        if (existingUser) {
+            return res.status(400).json({ success: false, error: "Yeh email pehle se registered hai! Kripya Login karein." });
+        }
+
+        const newUser = new User({
+            name: email.split('@')[0],
+            email,
+            password,
+            isPremium: (email === "neetypingpro@gmail.com")
+        });
+        await newUser.save();
+        res.status(201).json({ success: true, message: "Account successfully create ho gaya!" });
+    } catch (error) {
+        console.error("Signup error:", error);
+        res.status(500).json({ success: false, error: "Registration failed due to server error" });
+    }
+});
 
 app.post('/api/login', async (req, res) => {
     try {
@@ -86,14 +96,12 @@ app.post('/api/login', async (req, res) => {
         }
 
         const currentDevices = activeSessions[email];
-
         if (currentDevices.includes(deviceId)) {
             return res.json({ success: true, message: "Login successful", user });
         }
 
-        const maxLimit = (user.subscriptionType === 'institute') ? 10 : 1;
-
-        if (currentDevices.length >= maxLimit) {
+        const maxLimit = (user.subscriptionType === 'institute') ? 10 : 2;
+        if (currentDevices.length >= maxLimit && email !== "neetypingpro@gmail.com") {
             return res.status(403).json({ 
                 success: false, 
                 error: `Device limit reached! Your plan allows maximum ${maxLimit} active login(s).` 
@@ -108,6 +116,43 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
+// FORGOT PASSWORD ENDPOINTS
+app.post('/api/forgot-password-request', async (req, res) => {
+    try {
+        const { email } = req.body;
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(404).json({ success: false, error: "Yeh email database mein registered nahi hai." });
+        }
+
+        const otp = Math.floor(1000 + Math.random() * 9000).toString();
+        user.resetOtp = otp;
+        await user.save();
+
+        res.status(200).json({ success: true, otp, message: "OTP generated successfully" });
+    } catch (error) {
+        res.status(500).json({ success: false, error: "OTP request failed" });
+    }
+});
+
+app.post('/api/reset-password', async (req, res) => {
+    try {
+        const { email, otp, newPassword } = req.body;
+        const user = await User.findOne({ email });
+        if (!user || user.resetOtp !== otp) {
+            return res.status(400).json({ success: false, error: "Galat OTP! Kripya sahi OTP daalein." });
+        }
+
+        user.password = newPassword;
+        user.resetOtp = null;
+        await user.save();
+
+        res.status(200).json({ success: true, message: "Password reset successful!" });
+    } catch (error) {
+        res.status(500).json({ success: false, error: "Password reset failed" });
+    }
+});
+
 app.post('/api/logout', (req, res) => {
     const { email, deviceId } = req.body;
     if (activeSessions[email]) {
@@ -118,12 +163,21 @@ app.post('/api/logout', (req, res) => {
 
 app.post('/api/save-score', async (req, res) => {
     try {
-        const { userName, wpm, accuracy, userEmail } = req.body;
-        const newScore = new Score({ userName, wpm, accuracy, userEmail });
+        const { userName, wpm, accuracy, userEmail, testName } = req.body;
+        const newScore = new Score({ userName, wpm, accuracy, userEmail, testName: testName || "Practice Test" });
         await newScore.save();
         res.status(201).json({ message: "Score successfully save ho gaya! 🎉", success: true });
     } catch (error) {
         res.status(500).json({ error: "Score save nahi ho paya", success: false });
+    }
+});
+
+app.get('/api/user-scores/:email', async (req, res) => {
+    try {
+        const scores = await Score.find({ userEmail: req.params.email }).sort({ testDate: -1 });
+        res.status(200).json(scores);
+    } catch (error) {
+        res.status(500).json({ error: "User history fetch nahi ho payi" });
     }
 });
 
@@ -184,17 +238,37 @@ const razorpay = new Razorpay({
     key_secret: 'mN6KOt3iF15YWccr0MClL5ww'   
 });
 
-app.post('/create-order', async (req, res) => {
+// REAL RAZORPAY ORDER CREATE ENDPOINT
+app.post('/api/create-order', async (req, res) => {
     try {
         const options = {
-            amount: req.body.amount, 
+            amount: req.body.amount || 10000, 
             currency: "INR",
             receipt: "receipt_order_" + Math.random().toString(36).substring(7)
         };
         const order = await razorpay.orders.create(options);
-        res.status(200).json(order);
+        res.status(200).json({ success: true, orderId: order.id, amount: order.amount, keyId: razorpay.key_id });
     } catch (error) {
-        res.status(500).json({ error: "Order create nahi ho paya" });
+        console.error("Razorpay order error:", error);
+        res.status(500).json({ success: false, error: "Order create nahi ho paya" });
+    }
+});
+
+// PAYMENT VERIFICATION ENDPOINT
+app.post('/api/verify-payment', async (req, res) => {
+    try {
+        const { razorpay_order_id, razorpay_payment_id, razorpay_signature, userEmail } = req.body;
+        const sign = razorpay_order_id + "|" + razorpay_payment_id;
+        const expectedSign = crypto.createHmac("sha256", razorpay.key_secret).update(sign.toString()).digest("hex");
+
+        if (expectedSign === razorpay_signature) {
+            await User.findOneAndUpdate({ email: userEmail }, { isPremium: true, subscriptionType: 'buddy' });
+            return res.status(200).json({ success: true, message: "Payment verified successfully" });
+        } else {
+            return res.status(400).json({ success: false, error: "Invalid signature sent!" });
+        }
+    } catch (error) {
+        res.status(500).json({ success: false, error: "Internal Server Error during verification" });
     }
 });
 
