@@ -7,8 +7,6 @@ const BACKEND_URL = window.location.hostname === "localhost" || window.location.
     : ""; 
 
 const typeSound = new Audio('https://www.soundjay.com/button/sounds/button-16.mp3');
-const defaultTests = [];
-
 let currentTest = null;
 let timer = null;
 let testDurationMinutes = 10;
@@ -17,7 +15,6 @@ let timerStarted = false;
 let startTime = null;
 let currentExamCategory = 'delhi-hc';
 const examCategories = ['delhi-hc', 'supreme-court', 'rajasthan-hc', 'ldc', 'ssc'];
-
 const DEVELOPER_EMAIL = "neetypingpro@gmail.com";
 
 const translations = {
@@ -42,22 +39,7 @@ const translations = {
         th_rank: "Rank",
         th_name: "Name",
         th_wpm: "Net WPM",
-        th_acc: "Accuracy",
-        available_tests: "Available Typing Tests (Exam Specific)",
-        live_contests_title: "⚡ Live All India Competitions (AIR)",
-        live_contests_sub: "Participate in live tests with all aspirants and check your All India Rank.",
-        status_live: "LIVE NOW",
-        btn_join: "Join Contest 🚀",
-        add_test_title: "Add Your Own Custom Typing Test",
-        btn_save_test: "Test Save Karein",
-        prem_plans_title: "Choose Your Subscription Plan",
-        btn_buy_now: "Buy Now",
-        settings_title: "Account Settings & Profile",
-        user_info: "User Info",
-        btn_logout: "Logout",
-        btn_reset: "Reset App Data",
-        signup_link: "Sign Up",
-        forgot_link: "Forgot Password?"
+        th_acc: "Accuracy"
     },
     hi: {
         nav_home: "🏠 होम",
@@ -80,22 +62,7 @@ const translations = {
         th_rank: "रैंक",
         th_name: "नाम",
         th_wpm: "नेट WPM",
-        th_acc: "सटीकता",
-        available_tests: "उपलब्ध टाइपिंग टेस्ट (एग्जाम स्पेसिफिक)",
-        live_contests_title: "⚡ ऑल इंडिया लाइव प्रतियोगिताएं (AIR)",
-        live_contests_sub: "सभी अभ्यर्थियों के साथ लाइव टेस्ट में भाग लें।",
-        status_live: "अभी लाइव है",
-        btn_join: "प्रतियोगिता में शामिल हों 🚀",
-        add_test_title: "अपना खुद का कस्टम टाइपिंग टेस्ट जोड़ें",
-        btn_save_test: "टेस्ट सेव करें",
-        prem_plans_title: "अपना सब्सक्रिप्शन प्लान चुनें",
-        btn_buy_now: "अभी खरीदें",
-        settings_title: "खाता सेटिंग्स और प्रोफाइल",
-        user_info: "यूजर की जानकारी",
-        btn_logout: "लॉग आउट",
-        btn_reset: "डेटा रीसेट करें",
-        signup_link: "साइन अप करें",
-        forgot_link: "पासवर्ड भूल गए?"
+        th_acc: "सटीकता"
     }
 };
 
@@ -122,22 +89,6 @@ function getDeviceId() {
     return deviceId;
 }
 
-function registerDeviceForBuddyPlan() {
-    const deviceId = getDeviceId();
-    let registeredDevices = JSON.parse(localStorage.getItem('buddy_plan_devices') || '[]');
-    if (!registeredDevices.includes(deviceId)) {
-        if (registeredDevices.length >= 2) return false;
-        registeredDevices.push(deviceId);
-        localStorage.setItem('buddy_plan_devices', JSON.stringify(registeredDevices));
-    }
-    return true;
-}
-
-function getActiveDeviceCount() {
-    let registeredDevices = JSON.parse(localStorage.getItem('buddy_plan_devices') || '[]');
-    return registeredDevices.length;
-}
-
 window.onload = function() {
     const savedLang = localStorage.getItem('app_ui_lang') || 'en';
     changeUILanguage(savedLang);
@@ -154,7 +105,6 @@ window.onload = function() {
         };
     }
 
-    // Enter Key Support for Login inputs
     const loginPasswordInput = document.getElementById('login-password');
     if (loginPasswordInput) {
         loginPasswordInput.onkeydown = async function(e) {
@@ -177,6 +127,7 @@ window.onload = function() {
 
     loadTestCategories();
     loadLeaderboard();
+    loadUserHistory();
     manageAdsVisibility();
 };
 
@@ -228,6 +179,8 @@ function switchTab(tabName) {
 
     if (tabName === 'home' || tabName === 'tab-home') {
         document.getElementById('tab-home').style.display = 'block';
+        loadUserHistory();
+        loadLeaderboard();
     } else if (tabName === 'typing' || tabName === 'typing-tests') {
         document.getElementById('tab-typing-tests').style.display = 'block';
         loadTestCategories(); 
@@ -270,7 +223,7 @@ function manageAdsVisibility() {
     });
 }
 
-// Load Tests with Fixed Free/Paid & Delete Support
+// Load Tests with Proper Free/Paid & Delete Support
 async function loadTestCategories() {
     const container = document.getElementById('test-list-container');
     if (!container) return;
@@ -311,7 +264,6 @@ async function loadTestCategories() {
     }
 
     combinedTests.forEach((test) => {
-        // Fix: Explicitly handle free demo tests so they never show as paid
         const isFree = test.isFreeDemo || (!test.isPremium && !test.isLive);
         const isLocked = test.isPremium && !hasAccess && !isFree;
         
@@ -341,7 +293,7 @@ async function loadTestCategories() {
 
 async function deleteTestFromDb(testId, event) {
     event.stopPropagation();
-    if (!confirm("Kya aap sach mein is test को delete karna chahte hain?")) return;
+    if (!confirm("Kya aap sach mein is test ko delete karna chahte hain?")) return;
 
     try {
         const response = await fetch(`${BACKEND_URL}/api/delete-test/${testId}`, {
@@ -526,13 +478,17 @@ async function submitTest() {
 
         const userEmail = localStorage.getItem('user_email') || "User";
         const userName = userEmail.split('@')[0];
+        const testName = currentTest.title || "Typing Practice";
+
+        // Save Score and History
         await fetch(`${BACKEND_URL}/api/save-score`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userName, userEmail, wpm: netWPM, accuracy })
+            body: JSON.stringify({ userName, userEmail, testName, wpm: netWPM, accuracy })
         });
 
         loadLeaderboard();
+        loadUserHistory();
         document.getElementById('result-modal').style.display = 'flex';
     } catch (error) {
         alert("Test submit error.");
@@ -542,6 +498,42 @@ async function submitTest() {
 function closeResultModal() {
     document.getElementById('result-modal').style.display = 'none';
     switchTab('home');
+}
+
+// Fetch and display real User Test History
+async function loadUserHistory() {
+    const userEmail = localStorage.getItem('user_email');
+    const historyBody = document.getElementById('test-history-body');
+    if (!historyBody) return;
+
+    if (!userEmail) {
+        historyBody.innerHTML = `<tr><td colspan="4" style="padding: 15px; color: #777;">Please login to view history.</td></tr>`;
+        return;
+    }
+
+    try {
+        const response = await fetch(`${BACKEND_URL}/api/user-scores/${userEmail}`);
+        const scores = await response.json();
+        
+        historyBody.innerHTML = '';
+        if (!scores || scores.length === 0) {
+            historyBody.innerHTML = `<tr><td colspan="4" style="padding: 15px; color: #777;">No test history found. Start typing!</td></tr>`;
+            return;
+        }
+
+        scores.forEach((score) => {
+            historyBody.innerHTML += `
+                <tr style="border-bottom: 1px solid #ddd;">
+                    <td style="padding: 10px; font-weight: bold;">${score.testName || 'Practice Test'}</td>
+                    <td style="padding: 10px; color: #27ae60; font-weight: bold;">${score.wpm} WPM</td>
+                    <td style="padding: 10px;">${score.accuracy}%</td>
+                    <td style="padding: 10px;">1</td>
+                </tr>
+            `;
+        });
+    } catch (err) {
+        console.log("History fetch error:", err);
+    }
 }
 
 async function submitNewTest() {
@@ -586,7 +578,9 @@ async function submitNewTest() {
     }
 }
 
-function toggleDarkMode() { document.body.classList.toggle('dark-mode'); }
+function toggleDarkMode() { 
+    document.body.classList.toggle('dark-mode'); 
+}
 
 function loadSettingsProfile() {
     const userEmail = localStorage.getItem('user_email') || DEVELOPER_EMAIL;
@@ -616,7 +610,8 @@ async function logoutUser() {
     }
 }
 
-function loadLeaderboard() {
+// Clean Leaderboard (Excluding blank or anonymous test spam)
+async function loadLeaderboard() {
     fetch(`${BACKEND_URL}/api/leaderboard`)
         .then(res => res.json())
         .then(data => {
@@ -624,17 +619,20 @@ function loadLeaderboard() {
             if (!table) return;
             table.innerHTML = '';
             
-            if (!data || data.length === 0) {
-                table.innerHTML = `<tr><td colspan="4" style="padding: 15px; color: #888; text-align: center;">No scores yet. Complete a test to top the leaderboard!</td></tr>`;
+            // Filter out invalid or dummy entries
+            const validScores = data.filter(score => score.userName && score.userName !== "Test User" && score.wpm > 0);
+
+            if (!validScores || validScores.length === 0) {
+                table.innerHTML = `<tr><td colspan="4" style="padding: 15px; color: #888; text-align: center;">No leaderboard scores yet. Be the first!</td></tr>`;
                 return;
             }
 
-            data.forEach((score, index) => {
-                table.innerHTML += `<tr style="background-color: #fff; border-bottom: 1px solid #ddd;">
-                    <td style="padding: 12px; font-weight: bold;">${index + 1}</td>
-                    <td style="padding: 12px;">${score.userName}</td>
-                    <td style="padding: 12px; color: #27ae60; font-weight: bold;">${score.wpm}</td>
-                    <td style="padding: 12px;">${score.accuracy}%</td>
+            validScores.slice(0, 10).forEach((score, index) => {
+                table.innerHTML += `<tr style="border-bottom: 1px solid #ddd;">
+                    <td style="padding: 10px; font-weight: bold;">${index + 1}</td>
+                    <td style="padding: 10px;">${score.userName}</td>
+                    <td style="padding: 10px; color: #27ae60; font-weight: bold;">${score.wpm}</td>
+                    <td style="padding: 10px;">${score.accuracy}%</td>
                 </tr>`;
             });
         }).catch(err => console.log("Leaderboard error"));
