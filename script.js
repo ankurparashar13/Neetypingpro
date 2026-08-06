@@ -320,14 +320,7 @@ async function loadLiveContests() {
     const currentUserEmail = localStorage.getItem('user_email') || "";
     let liveTests = [];
 
-    // Add hardcoded default live contest if needed
-    liveTests.push({
-        id: "live_contest_1",
-        title: "Delhi High Court Open Speed Challenge #1",
-        content: "The high court held that speedy trial is a fundamental right of every citizen and delay in judicial proceedings defeats justice.",
-        category: "delhi-hc",
-        isLive: true
-    });
+   
 
     try {
         const response = await fetch(`${BACKEND_URL}/api/tests`);
