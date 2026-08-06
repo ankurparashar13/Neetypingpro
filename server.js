@@ -234,8 +234,8 @@ app.get('/api/leaderboard', async (req, res) => {
 });
 
 const razorpay = new Razorpay({
-    key_id: 'rzp_live_TKQs9AFoc6XT89',    
-    key_secret: 'mN6KOt3iF15YWccr0MClL5ww'   
+    key_id: 'rzp_live_TMKCGdGF9bJQp9',    
+    key_secret: 'YeZ1MRq6AXWnjOKxUH3baRXz'   
 });
 
 // REAL RAZORPAY ORDER CREATE ENDPOINT
