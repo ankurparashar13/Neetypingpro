@@ -621,18 +621,32 @@ async function loadUserHistory() {
 
 async function submitNewTest() {
     const currentUserEmail = localStorage.getItem('user_email') || DEVELOPER_EMAIL;
-    const title = document.getElementById('custom-test-title').value.trim();
-    const examCategory = document.getElementById('custom-test-exam-category').value;
-    const testType = document.getElementById('custom-test-type').value; 
-    const content = document.getElementById('custom-test-content').value.trim();
+    const titleField = document.getElementById('custom-test-title');
+    const examCategoryField = document.getElementById('custom-test-exam-category');
+    const testTypeField = document.getElementById('custom-test-type');
+    const contentField = document.getElementById('custom-test-content');
 
-    if (!title || !content) { alert("Title aur Content bharein!"); return; }
+    if (!titleField || !contentField || !examCategoryField || !testTypeField) {
+        alert("Kuch form fields missing hain!");
+        return;
+    }
+
+    const title = titleField.value.trim();
+    const examCategory = examCategoryField.value;
+    const testType = testTypeField.value; 
+    const content = contentField.value.trim();
+
+    if (!title || !content) { 
+        alert("Kripya Title aur Content dono bharein!"); 
+        return; 
+    }
 
     let isPremium = (testType === 'paid');
     let isLive = (testType === 'live');
     let isFreeDemo = (testType === 'free');
 
     try {
+        console.log("Sending test to server...", { title, category: examCategory, testType });
         const response = await fetch(`${BACKEND_URL}/api/add-test`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -646,19 +660,21 @@ async function submitNewTest() {
                 isFreeDemo
             })
         });
+        
         const data = await response.json();
         if (data.success) {
             alert("Custom test successfully save ho gaya! 🚀");
-            document.getElementById('custom-test-title').value = '';
-            document.getElementById('custom-test-content').value = '';
+            titleField.value = '';
+            contentField.value = '';
             loadTestCategories();
             loadLiveContests();
             switchTab('typing-tests');
         } else {
-            alert("Error: " + data.error);
+            alert("Server Error: " + (data.error || "Test save nahi ho paya."));
         }
     } catch (err) {
-        alert("Server connection error.");
+        console.error("Add test error:", err);
+        alert("Server connection error! Render server shayad sleep mode mein ho, kripya 10 second baad dobara try karein.");
     }
 }
 
