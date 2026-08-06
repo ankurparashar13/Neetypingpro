@@ -229,12 +229,6 @@ function isUserSuperAdminOrPremium() {
     return localStorage.getItem('neetyping_premium') === 'true';
 }
 
-function manageAdsVisibility() {
-    const isPrem = isUserSuperAdminOrPremium();
-    document.querySelectorAll('#result-ad-box, .sidebar-ad-box').forEach(adBox => {
-        adBox.style.display = isPrem ? 'none' : 'block';
-    });
-}
 
 // Live Contest Join Handler
 function joinLiveContest() {
