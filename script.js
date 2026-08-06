@@ -126,6 +126,7 @@ window.onload = function() {
     }
 
     loadTestCategories();
+    loadLiveContests();
     loadLeaderboard();
     loadUserHistory();
     manageAdsVisibility();
@@ -197,6 +198,7 @@ function switchTab(tabName) {
         loadTestCategories(); 
     } else if (tabName === 'contests') {
         document.getElementById('tab-contests').style.display = 'block';
+        loadLiveContests();
     } else if (tabName === 'add-test') {
         document.getElementById('tab-add-test').style.display = 'block';
     } else if (tabName === 'ai-chat' || tabName === 'tab-ai-chat') {
@@ -246,7 +248,7 @@ function joinLiveContest() {
     startTest(liveTest);
 }
 
-// Load Tests with Developer Delete Support
+// Load Tests for Typing Test Folder (Excluding Live Tests)
 async function loadTestCategories() {
     const container = document.getElementById('test-list-container');
     if (!container) return;
@@ -256,22 +258,12 @@ async function loadTestCategories() {
     const currentUserEmail = localStorage.getItem('user_email') || "";
     let combinedTests = [];
 
-    // Add Live Contest explicitly so it appears and can be handled/deleted if needed
-    combinedTests.push({
-        id: "live_contest_1",
-        title: "Delhi High Court Open Speed Challenge #1",
-        content: "The high court held that speedy trial is a fundamental right of every citizen and delay in judicial proceedings defeats justice.",
-        category: "delhi-hc",
-        isLive: true,
-        isFreeDemo: false,
-        isPremium: false
-    });
-
     try {
         const response = await fetch(`${BACKEND_URL}/api/tests`);
         const dbTests = await response.json();
         dbTests.forEach(test => {
-            if (test.category === currentExamCategory) {
+            // Sirf wahi tests aayenge jo is category ke hain aur LIVE NAHI hain
+            if (test.category === currentExamCategory && !test.isLive) {
                 combinedTests.push({
                     id: test._id,
                     language: 'english',
@@ -279,7 +271,7 @@ async function loadTestCategories() {
                     title: test.title,
                     content: test.content,
                     isPremium: test.isPremium,
-                    isLive: test.isLive,
+                    isLive: false,
                     isFreeDemo: test.isFreeDemo,
                     createdByEmail: test.createdByEmail,
                     isDbTest: true
@@ -303,13 +295,13 @@ async function loadTestCategories() {
         const card = document.createElement('div');
         card.style.cssText = "padding: 15px; margin: 10px 0; background: #fff; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center;";
         
-        // Strict Control: Delete button appears ONLY for developer email on ALL tests (including live)
+        // Strict Control: Delete button appears ONLY for developer email
         let deleteBtnHtml = (currentUserEmail === DEVELOPER_EMAIL) 
             ? `<button onclick="deleteTestFromDb('${test.id}', event)" style="background: #e74c3c; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; margin-left: 10px; font-weight: bold; font-size: 12px;">Delete</button>` 
             : '';
 
-        let badgeText = isLocked ? '🔒 [LOCKED]' : (test.isLive ? '🔴 [LIVE]' : (isFree ? '🟢 [FREE]' : '💎 [PAID]'));
-        let badgeColor = isFree ? '#27ae60' : (test.isLive ? '#e74c3c' : '#6a0dad');
+        let badgeText = isLocked ? '🔒 [LOCKED]' : (isFree ? '🟢 [FREE]' : '💎 [PAID]');
+        let badgeColor = isFree ? '#27ae60' : '#6a0dad';
 
         card.innerHTML = `
             <div style="cursor: pointer; flex: 1;" onclick='handleTestClick(${JSON.stringify(test)})'>
@@ -318,6 +310,70 @@ async function loadTestCategories() {
             </div>
             <div style="display: flex; align-items: center; gap: 10px;">
                 <span style="font-weight: bold; color: ${badgeColor}; cursor: pointer;" onclick='handleTestClick(${JSON.stringify(test)})'>${badgeText}</span>
+                ${deleteBtnHtml}
+            </div>
+        `;
+        container.appendChild(card);
+    });
+}
+
+// Load Live Tests ONLY for Live Contests Tab
+async function loadLiveContests() {
+    const container = document.getElementById('contest-list-container') || document.getElementById('live-contest-container');
+    if (!container) return;
+    container.innerHTML = '<p style="padding: 10px; color: #666;">Live contests load ho rahe hain...</p>';
+
+    const currentUserEmail = localStorage.getItem('user_email') || "";
+    let liveTests = [];
+
+    // Add hardcoded default live contest if needed
+    liveTests.push({
+        id: "live_contest_1",
+        title: "Delhi High Court Open Speed Challenge #1",
+        content: "The high court held that speedy trial is a fundamental right of every citizen and delay in judicial proceedings defeats justice.",
+        category: "delhi-hc",
+        isLive: true
+    });
+
+    try {
+        const response = await fetch(`${BACKEND_URL}/api/tests`);
+        const dbTests = await response.json();
+        dbTests.forEach(test => {
+            if (test.isLive) {
+                liveTests.push({
+                    id: test._id,
+                    title: test.title,
+                    content: test.content,
+                    category: test.category,
+                    isLive: true
+                });
+            }
+        });
+    } catch (err) {
+        console.log("Live contests fetch error:", err);
+    }
+
+    container.innerHTML = '';
+    if (liveTests.length === 0) {
+        container.innerHTML = `<p style="padding: 20px; color: #888;">Abhi koi Live Contest available nahi hai.</p>`;
+        return;
+    }
+
+    liveTests.forEach((test) => {
+        const card = document.createElement('div');
+        card.style.cssText = "padding: 15px; margin: 10px 0; background: #fff; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center;";
+        
+        let deleteBtnHtml = (currentUserEmail === DEVELOPER_EMAIL) 
+            ? `<button onclick="deleteTestFromDb('${test.id}', event)" style="background: #e74c3c; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; margin-left: 10px; font-weight: bold; font-size: 12px;">Delete</button>` 
+            : '';
+
+        card.innerHTML = `
+            <div style="cursor: pointer; flex: 1;" onclick='startTest(${JSON.stringify(test)})'>
+                <h4 style="margin: 0 0 5px 0; color: #333;">${test.title}</h4>
+                <p style="margin: 0; font-size: 13px; color: #666;">Exam: ${test.category.toUpperCase()} | Words: ~${test.content.split(/\s+/).length}</p>
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <span style="font-weight: bold; color: #e74c3c; cursor: pointer;" onclick='startTest(${JSON.stringify(test)})'>🔴 [LIVE]</span>
                 ${deleteBtnHtml}
             </div>
         `;
@@ -342,6 +398,7 @@ async function deleteTestFromDb(testId, event) {
         if (data.success) {
             alert("Test successfully delete ho gaya!");
             loadTestCategories();
+            loadLiveContests();
         } else {
             alert("Delete karne mein error aayi.");
         }
@@ -608,6 +665,7 @@ async function submitNewTest() {
             document.getElementById('custom-test-title').value = '';
             document.getElementById('custom-test-content').value = '';
             loadTestCategories();
+            loadLiveContests();
             switchTab('typing-tests');
         } else {
             alert("Error: " + data.error);
