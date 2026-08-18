@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="style.css">
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    
+</head>
 <body>
 
     <!-- Login Page / Screen -->
@@ -30,7 +30,11 @@
             <form id="login-form">
                 <input type="email" placeholder="Email ID" id="login-email" required>
                 <input type="password" placeholder="Password" id="login-password" required>
-                <button type="submit" id="login-btn">Login</button>
+                <!-- Login Button updated with loading spinner -->
+                <button type="submit" id="login-btn" style="position: relative;">
+                    <span id="login-btn-text">Login</span>
+                    <span id="login-spinner" style="display: none; font-size: 14px;">⏳ Wait...</span>
+                </button>
             </form>
             <div class="login-links" style="margin-top: 15px; display: flex; justify-content: space-between;">
                 <span onclick="openSignupModal()" style="cursor: pointer; color: #6a0dad; font-weight: bold;" data-i18n="signup_link">Sign Up</span>
@@ -43,9 +47,11 @@
     <div id="signup-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000;">
         <div style="background: #fff; padding: 30px; border-radius: 10px; width: 350px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">
             <h3 style="color: #6a0dad; margin-bottom: 15px;">Create New Account</h3>
-            <input type="email" id="signup-email" placeholder="Enter Email ID" style="width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px;">
-            <input type="password" id="signup-password" placeholder="Create Password" style="width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px;">
-            <button onclick="handleSignup()" style="width: 100%; padding: 10px; background-color: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; margin-top: 10px;">Register</button>
+            <!-- Added Name Field for dynamic Welcome message -->
+            <input type="text" id="signup-name" placeholder="Enter Full Name" style="width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px;" required>
+            <input type="email" id="signup-email" placeholder="Enter Email ID" style="width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px;" required>
+            <input type="password" id="signup-password" placeholder="Create Password" style="width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px;" required>
+            <button onclick="handleSignup()" id="signup-btn" style="width: 100%; padding: 10px; background-color: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; margin-top: 10px;">Register</button>
             <button onclick="closeSignupModal()" style="width: 100%; padding: 8px; background-color: #ff4d4d; color: white; border: none; border-radius: 5px; cursor: pointer; margin-top: 8px;">Cancel</button>
         </div>
     </div>
@@ -70,8 +76,8 @@
     <!-- Pre-Test Mandatory Ad Popup Modal -->
     <div id="pre-test-ad-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); justify-content: center; align-items: center; z-index: 3000; padding: 20px;">
         <div style="background: #fff; padding: 30px; border-radius: 12px; width: 90%; max-width: 500px; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.4);">
-            <h3 style="color: #d35400; margin-top: 0;">📢 Sponsored Advertisement</h3>
-            <p style="color: #666; font-size: 14px;">Test shuru hone se pehle kripya is ad ko dekhein...</p>
+            <h3 style="color: #d35400; margin-top: 0;" data-i18n="ad_title">📢 Sponsored Advertisement</h3>
+            <p style="color: #666; font-size: 14px;" data-i18n="ad_sub">Test shuru hone se pehle kripya is ad ko dekhein...</p>
             <div style="margin: 20px 0; background: #f1f1f1; padding: 15px; border-radius: 8px; border: 1px dashed #ccc; min-height: 150px; display: flex; align-items: center; justify-content: center;">
                 <span id="ad-timer-text" style="font-weight: bold; font-size: 18px; color: #333;">Ad loading... (5s)</span>
             </div>
@@ -118,18 +124,25 @@
             <div id="tab-home" class="tab-pane" style="display: block;">
                 <div style="background: linear-gradient(135deg, #662d91, #9b59b6); color: white; padding: 25px 30px; border-radius: 12px; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.15);">
                     <div>
-                        <h1 style="margin: 0; font-size: 28px;"><span data-i18n="welcome_text">Welcome back</span>, <span id="home-username" style="color: #f1c40f;">Ankur</span>! 👋</h1>
+                        <!-- Updated User Name ID to avoid hardcoded 'Ankur' -->
+                        <h1 style="margin: 0; font-size: 28px;"><span data-i18n="welcome_text">Welcome back</span>, <span id="home-username" style="color: #f1c40f;">User</span>! 👋</h1>
                         <p style="margin: 5px 0 0 0; font-size: 16px; opacity: 0.9;" data-i18n="welcome_sub">Ready to boost your typing speed today?</p>
                     </div>
-                    <div style="background: rgba(255,255,255,0.2); padding: 8px 15px; border-radius: 8px; font-weight: bold; font-size: 14px; border: 1px solid rgba(255,255,255,0.4);">
-                        BUDDY PLAN ACTIVE (Max 2 PCs)
+                    <div>
+                        <!-- Buddy Plan Badge (Dynamic) -->
+                        <div id="buddy-plan-badge" style="display: none; background: rgba(39, 174, 96, 0.9); padding: 8px 15px; border-radius: 8px; font-weight: bold; font-size: 14px; border: 1px solid rgba(255,255,255,0.4);">
+                            💎 BUDDY PLAN ACTIVE
+                        </div>
+                        <!-- Free Plan Badge (Dynamic) -->
+                        <div id="free-plan-badge" style="display: block; background: rgba(255,255,255,0.2); padding: 8px 15px; border-radius: 8px; font-weight: bold; font-size: 14px; border: 1px solid rgba(255,255,255,0.4);">
+                            FREE PLAN 
+                        </div>
                     </div>
                 </div>
 
-                <!-- Hindi Typing Option Removed (Only English Typing Active) -->
                 <div class="language-selection" style="display: flex; gap: 20px; font-weight: bold; margin-bottom: 20px;">
                     <label style="cursor: pointer; font-size: 16px; color: #6a0dad;">
-                        ⌨️ English Typing Practice Mode Active
+                        <span data-i18n="typing_mode">⌨️ English Typing Practice Mode Active</span>
                     </label>
                 </div>
 
@@ -222,17 +235,18 @@
 
             <!-- Tab 5: AI Chatbot -->
             <div id="tab-ai-chat" class="tab-pane" style="display: none;">
-                <h1 style="color: #6a0dad; margin-bottom: 10px;">🤖 AI Assistant & Chatbot</h1>
-                <p style="color: #666; margin-bottom: 20px;">Aap yahan typing tips, legal terminology, ya kisi bhi sawaal ke liye AI se baat kar sakte hain.</p>
+                <h1 style="color: #6a0dad; margin-bottom: 10px;" data-i18n="ai_chatbot_title">🤖 AI Assistant & Chatbot</h1>
+                <p style="color: #666; margin-bottom: 20px;" data-i18n="ai_chatbot_sub">Aap yahan typing tips, legal terminology, ya kisi bhi sawaal ke liye AI se baat kar sakte hain.</p>
                 <div style="background: #fff; border: 1px solid #ddd; border-radius: 8px; height: 450px; display: flex; flex-direction: column; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+                    <!-- Chat Container where JS will append messages -->
                     <div id="chat-messages" style="flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; background: #f9f9f9;">
-                        <div style="align-self: flex-start; background: #e2e8f0; padding: 10px 15px; border-radius: 8px; max-width: 70%; font-size: 14px; color: #333;">
+                        <div id="ai-greeting" style="align-self: flex-start; background: #e2e8f0; padding: 10px 15px; border-radius: 8px; max-width: 70%; font-size: 14px; color: #333;">
                             Hello! Main aapka AI assistant hoon. Main aapki typing speed improve karne mein kaise madad kar sakta hoon?
                         </div>
                     </div>
                     <div style="padding: 15px; border-top: 1px solid #ddd; display: flex; gap: 10px; background: #fff;">
                         <input type="text" id="chat-input-box" placeholder="Kuchh poochhein..." style="flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 6px; outline: none;">
-                        <button onclick="sendAIChatMessage()" style="padding: 10px 20px; background: #6a0dad; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">Send</button>
+                        <button onclick="sendAIChatMessage()" id="chat-send-btn" style="padding: 10px 20px; background: #6a0dad; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">Send</button>
                     </div>
                 </div>
             </div>
@@ -266,7 +280,8 @@
                                 <strong>User Email:</strong> <span id="profile-email">Loading...</span>
                             </div>
                             <div style="border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 10px;">
-                                <strong>Subscription:</strong> <span id="profile-sub-status" style="font-weight: bold; color: #28a745;">Loading...</span>
+                                <!-- Updated Fake Success status to default Free Status -->
+                                <strong>Subscription:</strong> <span id="profile-sub-status" style="font-weight: bold; color: #777;">Free Plan</span>
                             </div>
                             <div style="border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 10px;">
                                 <strong>Linked Devices (PCs):</strong> <span id="profile-device-count" style="font-weight: bold; color: #6a0dad;">0 / 2</span>

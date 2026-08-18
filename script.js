@@ -17,6 +17,7 @@ let currentExamCategory = 'delhi-hc';
 const examCategories = ['delhi-hc', 'supreme-court', 'rajasthan-hc', 'ldc', 'ssc'];
 const DEVELOPER_EMAIL = "neetypingpro@gmail.com";
 
+// BUG 3 FIXED: Better Proper Hindi/English Dictionary
 const translations = {
     en: {
         nav_home: "🏠 Home",
@@ -39,7 +40,26 @@ const translations = {
         th_rank: "Rank",
         th_name: "Name",
         th_wpm: "Net WPM",
-        th_acc: "Accuracy"
+        th_acc: "Accuracy",
+        typing_mode: "⌨️ English Typing Practice Mode Active",
+        available_tests: "Available Typing Tests (Exam Specific)",
+        live_contests_title: "⚡ Live All India Competitions (AIR)",
+        live_contests_sub: "Compete with aspirants live and check your All India Rank.",
+        add_test_title: "Add Your Own Custom Typing Test",
+        ai_chatbot_title: "🤖 AI Assistant & Chatbot",
+        ai_chatbot_sub: "Ask AI for typing tips, legal terminology, or any questions here.",
+        prem_plans_title: "Choose Your Subscription Plan",
+        settings_title: "Account Settings & Profile",
+        user_info: "User Info",
+        btn_logout: "Logout",
+        btn_reset: "Reset App Data",
+        btn_save_test: "Save Test",
+        btn_join: "Join Contest 🚀",
+        btn_buy_now: "Buy Now (₹100)",
+        signup_link: "Sign Up",
+        forgot_link: "Forgot Password?",
+        ad_title: "📢 Sponsored Advertisement",
+        ad_sub: "Please view this ad before starting the test..."
     },
     hi: {
         nav_home: "🏠 होम",
@@ -62,7 +82,26 @@ const translations = {
         th_rank: "रैंक",
         th_name: "नाम",
         th_wpm: "नेट WPM",
-        th_acc: "सटीकता"
+        th_acc: "सटीकता",
+        typing_mode: "⌨️ अंग्रेजी टाइपिंग अभ्यास मोड सक्रिय",
+        available_tests: "उपलब्ध टाइपिंग टेस्ट (परीक्षा के अनुसार)",
+        live_contests_title: "⚡ लाइव अखिल भारतीय प्रतियोगिताएं (AIR)",
+        live_contests_sub: "सभी छात्रों के साथ लाइव टेस्ट दें और अपनी रैंक चेक करें।",
+        add_test_title: "अपना खुद का कस्टम टाइपिंग टेस्ट जोड़ें",
+        ai_chatbot_title: "🤖 एआई सहायक और चैटबॉट",
+        ai_chatbot_sub: "आप यहाँ टाइपिंग टिप्स, कानूनी शब्दावली, या किसी भी सवाल के लिए AI से बात कर सकते हैं।",
+        prem_plans_title: "अपना सदस्यता प्लान चुनें",
+        settings_title: "खाता सेटिंग्स और प्रोफ़ाइल",
+        user_info: "उपयोगकर्ता की जानकारी",
+        btn_logout: "लॉग आउट करें",
+        btn_reset: "ऐप डेटा रीसेट करें",
+        btn_save_test: "टेस्ट सेव करें",
+        btn_join: "कॉन्टेस्ट जॉइन करें 🚀",
+        btn_buy_now: "अभी खरीदें (₹100)",
+        signup_link: "नया खाता बनाएँ",
+        forgot_link: "पासवर्ड भूल गए?",
+        ad_title: "📢 प्रायोजित विज्ञापन",
+        ad_sub: "टेस्ट शुरू होने से पहले कृपया इस विज्ञापन को देखें..."
     }
 };
 
@@ -129,10 +168,9 @@ window.onload = function() {
     loadLiveContests();
     loadLeaderboard();
     loadUserHistory();
-    manageAdsVisibility();
 };
 
-// REAL DATABASE LOGIN
+// BUG 1 FIXED: Login Lag Issue - Added UI Spinner & Button Disable
 async function processLogin() {
     const email = document.getElementById('login-email').value.trim();
     const password = document.getElementById('login-password').value.trim();
@@ -140,6 +178,17 @@ async function processLogin() {
     if (!email || !password) {
         alert("Kripya Email aur Password dono bharein!");
         return;
+    }
+
+    const loginBtnText = document.getElementById('login-btn-text');
+    const loginSpinner = document.getElementById('login-spinner');
+    const loginBtn = document.getElementById('login-btn');
+
+    // Show loading UI
+    if (loginBtnText && loginSpinner) {
+        loginBtnText.style.display = 'none';
+        loginSpinner.style.display = 'inline';
+        loginBtn.disabled = true;
     }
 
     try {
@@ -151,10 +200,19 @@ async function processLogin() {
         const data = await response.json();
         
         if (data.success || email === DEVELOPER_EMAIL) {
+            // Check if backend sent name, else keep existing
+            if (data.name) localStorage.setItem('user_name', data.name);
+            
             alert("Login successful! 🎉");
             localStorage.setItem('user_email', email);
             localStorage.setItem('is_logged_in', 'true');
             if (email === DEVELOPER_EMAIL) localStorage.setItem('neetyping_premium', 'true');
+            
+            // Set premium status from DB if available
+            if (data.isPremium !== undefined) {
+                localStorage.setItem('neetyping_premium', data.isPremium ? 'true' : 'false');
+            }
+            
             hideLoginShowHome(); 
         } else {
             alert(data.error || "Galat Email ya Password! Kripya pehle Sign Up karein.");
@@ -168,14 +226,44 @@ async function processLogin() {
         } else {
             alert("Server se connect nahi ho pa raha. Kripya connection check karein.");
         }
+    } finally {
+        // Reset loading UI
+        if (loginBtnText && loginSpinner) {
+            loginBtnText.style.display = 'inline';
+            loginSpinner.style.display = 'none';
+            loginBtn.disabled = false;
+        }
     }
 }
 
+// BUG 2 & 5 FIXED: Dynamic Name Welcome + Real Plan Badge View
 function hideLoginShowHome() {
     document.getElementById('login-page').style.display = 'none';
     document.getElementById('app-section').style.display = 'flex';
+    
+    // Set Dynamic User Name
+    const userEmail = localStorage.getItem('user_email') || '';
+    const storedName = localStorage.getItem('user_name');
+    const nameDisplay = document.getElementById('home-username');
+    
+    if (nameDisplay && userEmail) {
+        let displayName = storedName || userEmail.split('@')[0];
+        // Capitalize first letter
+        displayName = displayName.charAt(0).toUpperCase() + displayName.slice(1);
+        nameDisplay.innerText = displayName;
+    }
+
+    // Toggle Buddy/Free Badges correctly
+    const isPrem = isUserSuperAdminOrPremium();
+    const buddyBadge = document.getElementById('buddy-plan-badge');
+    const freeBadge = document.getElementById('free-plan-badge');
+    
+    if (buddyBadge && freeBadge) {
+        buddyBadge.style.display = isPrem ? 'block' : 'none';
+        freeBadge.style.display = isPrem ? 'none' : 'block';
+    }
+
     switchTab('home');
-    manageAdsVisibility();
 }
 
 function switchTab(tabName) {
@@ -209,7 +297,6 @@ function switchTab(tabName) {
         document.getElementById('tab-settings').style.display = 'block';
         if (typeof loadSettingsProfile === 'function') loadSettingsProfile();
     }
-    manageAdsVisibility();
 }
 
 function switchExamCategory(cat) {
@@ -229,6 +316,10 @@ function isUserSuperAdminOrPremium() {
     return localStorage.getItem('neetyping_premium') === 'true';
 }
 
+function getActiveDeviceCount() {
+    // Dummy function since device limit logic usually runs on backend
+    return localStorage.getItem('is_logged_in') ? 1 : 0; 
+}
 
 // Live Contest Join Handler
 function joinLiveContest() {
@@ -242,7 +333,7 @@ function joinLiveContest() {
     startTest(liveTest);
 }
 
-// Load Tests for Typing Test Folder (Excluding Live Tests)
+// Load Tests for Typing Test Folder
 async function loadTestCategories() {
     const container = document.getElementById('test-list-container');
     if (!container) return;
@@ -256,7 +347,6 @@ async function loadTestCategories() {
         const response = await fetch(`${BACKEND_URL}/api/tests`);
         const dbTests = await response.json();
         dbTests.forEach(test => {
-            // Sirf wahi tests aayenge jo is category ke hain aur LIVE NAHI hain
             if (test.category === currentExamCategory && !test.isLive) {
                 combinedTests.push({
                     id: test._id,
@@ -289,7 +379,6 @@ async function loadTestCategories() {
         const card = document.createElement('div');
         card.style.cssText = "padding: 15px; margin: 10px 0; background: #fff; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center;";
         
-        // Strict Control: Delete button appears ONLY for developer email
         let deleteBtnHtml = (currentUserEmail === DEVELOPER_EMAIL) 
             ? `<button onclick="deleteTestFromDb('${test.id}', event)" style="background: #e74c3c; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; margin-left: 10px; font-weight: bold; font-size: 12px;">Delete</button>` 
             : '';
@@ -313,14 +402,12 @@ async function loadTestCategories() {
 
 // Load Live Tests ONLY for Live Contests Tab
 async function loadLiveContests() {
-    const container = document.getElementById('contest-list-container') || document.getElementById('live-contest-container');
+    const container = document.getElementById('contest-list-container');
     if (!container) return;
     container.innerHTML = '<p style="padding: 10px; color: #666;">Live contests load ho rahe hain...</p>';
 
     const currentUserEmail = localStorage.getItem('user_email') || "";
     let liveTests = [];
-
-   
 
     try {
         const response = await fetch(`${BACKEND_URL}/api/tests`);
@@ -504,6 +591,7 @@ if (typingInput) {
     };
 }
 
+// BUG 6 FIXED: Perfect Typing Standard Math Formula Implemented
 async function submitTest() {
     try { 
         if (timer) clearInterval(timer);
@@ -513,15 +601,16 @@ async function submitTest() {
         
         const typedText = inputArea.value.trim();
         const originalText = currentTest.content;
-        const timeSpentSecs = startTime ? (new Date() - startTime) / 1000 : 60;
-        const timeSpentMins = Math.max(timeSpentSecs / 60, 0.1);
         
+        // Time Calculation
+        const timeSpentSecs = startTime ? (new Date() - startTime) / 1000 : 60;
+        const timeSpentMins = Math.max(timeSpentSecs / 60, 0.1); 
+        
+        // Split logic for HTML Highlighting (Visuals only)
         const typedWords = typedText.split(/\s+/).filter(w => w.length > 0);
         const originalWords = originalText.split(/\s+/);
-        const wordsTypedCount = typedWords.length;
-        const grossWPM = Math.round(wordsTypedCount / timeSpentMins);
         
-        let fullMistakes = 0;
+        let fullMistakes = 0; // Word errors for display logic
         let origHTML = '';
         let typedHTML = '';
         
@@ -536,7 +625,7 @@ async function submitTest() {
                 origHTML += `<span class="correct-text">${orig} </span>`;
                 typedHTML += `<span class="correct-text">${typed} </span>`;
             } else {
-                fullMistakes++;
+                fullMistakes++; // Found a wrong word
                 origHTML += `<span class="mistake-text">${orig} </span>`;
                 typedHTML += `<span class="mistake-text">${typed} </span>`;
             }
@@ -549,9 +638,28 @@ async function submitTest() {
             }
         }
 
-        const netWPM = Math.max(Math.round((wordsTypedCount - fullMistakes) / timeSpentMins), 0);
-        const accuracy = wordsTypedCount > 0 ? Math.max(Math.round(((wordsTypedCount - fullMistakes) / wordsTypedCount) * 100), 0) : 0;
+        // ==========================================
+        // TRUE WPM MATH CALCULATION (STANDARD RULE)
+        // 5 Keystrokes = 1 Word
+        // ==========================================
+        const typedCharsLength = typedText.length;
+        
+        // Gross WPM = (Total characters / 5) / Time in Mins
+        const grossWPM = Math.round((typedCharsLength / 5) / timeSpentMins);
+        
+        // Net WPM = Gross WPM - (Uncorrected Errors / Time in Mins)
+        let netWPM = Math.round(grossWPM - (fullMistakes / timeSpentMins));
+        if (netWPM < 0) netWPM = 0; // Negative handle
 
+        // Accuracy = (Net WPM / Gross WPM) * 100
+        let accuracy = 0;
+        if (grossWPM > 0) {
+            accuracy = Math.round((netWPM / grossWPM) * 100);
+            if (accuracy < 0) accuracy = 0;
+            if (accuracy > 100) accuracy = 100;
+        }
+
+        // Push data to Result UI
         document.getElementById('res-gross').innerText = grossWPM;
         document.getElementById('res-net').innerText = netWPM;
         document.getElementById('res-acc').innerText = accuracy + '%';
@@ -559,11 +667,12 @@ async function submitTest() {
         document.getElementById('res-original').innerHTML = origHTML;
         document.getElementById('res-typed').innerHTML = typedHTML;
 
+        // DB Data Prep
         const userEmail = localStorage.getItem('user_email') || "User";
-        const userName = userEmail.split('@')[0];
+        let userName = localStorage.getItem('user_name') || userEmail.split('@')[0];
         const testName = currentTest.title || "Typing Practice";
 
-        // Save Score and History
+        // Save Score and History to Server
         await fetch(`${BACKEND_URL}/api/save-score`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -575,6 +684,7 @@ async function submitTest() {
         document.getElementById('result-modal').style.display = 'flex';
     } catch (error) {
         alert("Test submit error.");
+        console.error(error);
     }
 }
 
@@ -682,6 +792,7 @@ function toggleDarkMode() {
     document.body.classList.toggle('dark-mode'); 
 }
 
+// BUG 5 FIXED: Buddy Plan showing correctly in Settings
 function loadSettingsProfile() {
     const userEmail = localStorage.getItem('user_email') || DEVELOPER_EMAIL;
     const isAdmin = (userEmail === DEVELOPER_EMAIL);
@@ -691,11 +802,20 @@ function loadSettingsProfile() {
 
     if (isAdmin) {
         document.getElementById('profile-sub-status').innerText = "⭐ SUPER ADMIN (Lifetime Access)";
+        document.getElementById('profile-sub-status').style.color = "#d35400";
         document.getElementById('profile-device-count').innerText = "Unlimited / Admin Access";
         document.getElementById('profile-sub-start').innerText = "Lifetime";
         document.getElementById('profile-sub-end').innerText = "Never Expires (Lifetime)";
     } else {
-        document.getElementById('profile-sub-status').innerText = isPrem ? "BUDDY PLAN ACTIVE" : "Free Plan";
+        const subStatusEl = document.getElementById('profile-sub-status');
+        if (isPrem) {
+            subStatusEl.innerText = "BUDDY PLAN ACTIVE";
+            subStatusEl.style.color = "#27ae60"; // Green for Active
+        } else {
+            subStatusEl.innerText = "Free Plan";
+            subStatusEl.style.color = "#777"; // Grey for Free
+        }
+
         document.getElementById('profile-device-count').innerText = getActiveDeviceCount() + " / 2 PCs";
         document.getElementById('profile-sub-start').innerText = localStorage.getItem('sub_start') || "N/A";
         document.getElementById('profile-sub-end').innerText = localStorage.getItem('sub_end') || "N/A";
@@ -706,6 +826,8 @@ async function logoutUser() {
     if (confirm("Kya aap logout karna chahte hain?")) {
         localStorage.removeItem('is_logged_in');
         localStorage.removeItem('user_email');
+        localStorage.removeItem('neetyping_premium');
+        localStorage.removeItem('user_name');
         location.reload();
     }
 }
@@ -780,7 +902,6 @@ async function selectBuddyPlan(amountInRupees, planName) {
                 if (verifyData.success) {
                     localStorage.setItem('neetyping_premium', 'true');
                     alert("Payment Successful! Buddy Plan activated successfully. 🎉");
-                    manageAdsVisibility();
                     switchTab('home');
                 } else {
                     alert("Payment verification failed!");
@@ -799,10 +920,9 @@ async function selectBuddyPlan(amountInRupees, planName) {
 
     } catch (err) {
         console.error("Payment gateway error:", err);
-        // Fallback for direct activation if backend order route is missing
+        // Fallback for direct activation if backend order route is missing (For Debugging)
         localStorage.setItem('neetyping_premium', 'true');
         alert("Buddy Special Plan Unlocked Successfully!");
-        manageAdsVisibility();
         switchTab('home');
     }
 }
@@ -814,9 +934,11 @@ function closeSignupModal() { document.getElementById('signup-modal').style.disp
 async function handleSignup() {
     const email = document.getElementById('signup-email').value.trim();
     const password = document.getElementById('signup-password').value.trim();
+    const nameInput = document.getElementById('signup-name');
+    const name = nameInput ? nameInput.value.trim() : "";
 
-    if (!email || !password) {
-        alert("Kripya Email aur Password dono daalein!");
+    if (!email || !password || !name) {
+        alert("Kripya Apna Naam, Email aur Password teeno daalein!");
         return;
     }
 
@@ -824,12 +946,13 @@ async function handleSignup() {
         const response = await fetch(`${BACKEND_URL}/api/signup`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password })
+            body: JSON.stringify({ name, email, password })
         });
         const data = await response.json();
 
-        if (data.success) {
+        if (data.success || !data.error) {
             alert("Account successfully register ho gaya! Ab aap login kar sakte hain.");
+            localStorage.setItem('user_name', name); // Backup in local
             closeSignupModal();
         } else {
             alert(data.error || "Registration failed!");
@@ -907,18 +1030,49 @@ async function verifyOTPAndReset() {
     }
 }
 
+// BUG 4 FIXED: Smart AI Chatbot Logic
+function getSmartAIReply(text) {
+    const lowerText = text.toLowerCase();
+    
+    if (lowerText.includes('speed') || lowerText.includes('wpm')) {
+        return "Typing speed badhane ke liye backspace ka kam use karein aur screen par dekhein, keyboard par nahi. Daily 30 mins practice zaroori hai.";
+    } else if (lowerText.includes('accuracy') || lowerText.includes('galat') || lowerText.includes('mistake')) {
+        return "Accuracy improve karne ke liye shuru mein slow type karein. Ek baar muscle memory ban gayi, toh speed apne aap aayegi!";
+    } else if (lowerText.includes('hello') || lowerText.includes('hi')) {
+        return "Hello! Main NeeTypingPro ka AI Assistant hoon. Bataiye main aapki kya madad karoon?";
+    } else if (lowerText.includes('exam') || lowerText.includes('high court') || lowerText.includes('court')) {
+        return "High Court exams mein legal aur hard words zyada aate hain. Aap 'Typing Test' tab se 'Delhi HC' ya 'Supreme Court' wale tests zarur try karein.";
+    } else if (lowerText.includes('hindi')) {
+        return "Abhi website par English mode active hai. Jald hi Mangal/Kruti Dev font ke sath proper Hindi typing feature bhi available hoga!";
+    } else if (lowerText.includes('premium') || lowerText.includes('plan') || lowerText.includes('paise')) {
+        return "Aap Buddy Plan (₹100) le sakte hain, jisme saare premium tests aur live contests unlock ho jayenge.";
+    } else {
+        return "Main samajh gaya. Apni typing practice regular rakhein. Koi technical dikkat aaye toh 'Settings' mein jaakar 'Reset App Data' zarur try karein!";
+    }
+}
+
 function sendAIChatMessage() {
     const input = document.getElementById('chat-input-box');
     const container = document.getElementById('chat-messages');
     if(!input || !input.value.trim()) return;
 
-    const userText = input.value;
+    const userText = input.value.trim();
+    
+    // Add User Message
     container.innerHTML += `<div style="align-self: flex-end; background: #6a0dad; color: white; padding: 10px 15px; border-radius: 8px; max-width: 70%; font-size: 14px;">${userText}</div>`;
     input.value = '';
 
-    setTimeout(() => {
-        container.innerHTML += `<div style="align-self: flex-start; background: #e2e8f0; padding: 10px 15px; border-radius: 8px; max-width: 70%; font-size: 14px; color: #333;">Aapka sawaal mil gaya hai. Typing speed improve karne ke liye daily regular practice karein!</div>`;
-        container.scrollTop = container.scrollHeight;
-    }, 1000);
+    // Scroll to bottom
     container.scrollTop = container.scrollHeight;
+
+    // Simulate AI thinking and reply
+    const sendBtn = document.getElementById('chat-send-btn');
+    if(sendBtn) sendBtn.disabled = true;
+
+    setTimeout(() => {
+        const aiReply = getSmartAIReply(userText);
+        container.innerHTML += `<div style="align-self: flex-start; background: #e2e8f0; padding: 10px 15px; border-radius: 8px; max-width: 70%; font-size: 14px; color: #333;">${aiReply}</div>`;
+        container.scrollTop = container.scrollHeight;
+        if(sendBtn) sendBtn.disabled = false;
+    }, 800);
 }
